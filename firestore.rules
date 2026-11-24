@@ -8,6 +8,7 @@ service cloud.firestore {
     function isAdmin() { return hasProfile() && rol() == 'admin'; }
     function isStaff() { return hasProfile() && rol() in ['admin','coordinador','jefesala','cocina','camarero']; }
     function canPlan() { return hasProfile() && rol() in ['admin','coordinador']; }
+    function canEdit() { return hasProfile() && rol() in ['admin','coordinador','jefesala']; }
 
     match /config/bootstrap {
       allow read: if signedIn();
@@ -15,6 +16,10 @@ service cloud.firestore {
         && !exists(/databases/$(database)/documents/config/bootstrap)
         && request.resource.data.adminUid == request.auth.uid;
       allow update, delete: if false;
+    }
+
+    match /config/costes {
+      allow read, write: if canPlan();
     }
 
     match /users/{uid} {
@@ -30,11 +35,16 @@ service cloud.firestore {
 
     match /eventos/{id} {
       allow read: if isStaff();
-      allow create: if canPlan() && request.resource.data.papelera == false;
-      // Solo el administrador puede enviar a la papelera o sacar de ella
-      allow update: if canPlan()
-        && (isAdmin() || request.resource.data.get('papelera', false) == resource.data.get('papelera', false));
+      allow create: if canPlan() && request.resource.data.get('papelera', false) == false;
+      // Jefe de sala edita; solo administración y coordinación envían a la papelera
+      allow update: if canEdit()
+        && (canPlan() || request.resource.data.get('papelera', false) == resource.data.get('papelera', false));
       allow delete: if isAdmin();
+    }
+
+    match /puntos_mejora/{id} {
+      allow create: if isStaff();
+      allow read, update, delete: if canPlan();
     }
   }
 }
