@@ -154,3 +154,6 @@ aside nav #tab-jsw-protocolo.subnav-active, aside nav #tab-jsw-protocolo.nav-act
 .evi-tab td, .evt-tab td, .eva-tab td { border-color: #E1D9CA !important; }
 main .border-black { border-color: #CFC6B4 !important; }
 .evi-titulo, .eva-titulo { font-family: 'Fraunces', Georgia, serif; font-weight: 600 !important; letter-spacing: .02em; }
+.evc-tab, .evq-tab, .ts-tab, .inf-tab, .app-tab { border-color: #CFC6B4 !important; }
+.evc-tab td, .evc-tab th, .evq-tab td, .evq-tab th, .ts-tab td, .ts-tab th, .inf-tab td, .inf-tab th, .app-tab td, .app-tab th { border-color: #E1D9CA !important; }
+.evc-titulo { font-family: 'Fraunces', Georgia, serif; font-weight: 600 !important; }

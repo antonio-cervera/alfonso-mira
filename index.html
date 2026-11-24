@@ -448,12 +448,12 @@
         @media print { body * { visibility:hidden !important; } #seating-a4-sheet,#seating-a4-sheet * { visibility:visible !important; } #seating-a4-sheet { position:absolute;left:0;top:0;width:210mm;min-height:297mm;box-shadow:none;border:none; } }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="tema-colores.css">
-    <link rel="stylesheet" href="tema.css">
+    <link rel="stylesheet" href="tema-colores.css?v=1795561871">
+    <link rel="stylesheet" href="tema.css?v=1795561871">
 </head>
 <body class="h-screen w-screen flex flex-row">
-    <script src="firebase-config.js"></script>
-    <script src="puente.js"></script>
+    <script src="firebase-config.js?v=1795561871"></script>
+    <script src="puente.js?v=1795561871"></script>
 
     <!-- DATALISTS PARA MATERIALES -->
     <datalist id="dl-manteleria-art"><option value="MANTELES CASA"></option><option value="MANTELES ALQUILER"></option><option value="CUBREMANTEL CASA"></option><option value="CUBREMANTEL ALQUILER"></option><option value="SERVILLETAS CASA"></option><option value="SERVILLETAS ALQUILER"></option><option value="LITOS"></option></datalist>
@@ -4251,7 +4251,8 @@
             const st = `grid-column:span ${span};${o.rows ? `grid-row:span ${o.rows};` : ''}${o.bg ? `background:${o.bg};` : ''}${o.color ? `color:${o.color};` : ''}${o.style || ''}`;
             return `<div class="prt-c ${o.cls || ''}" ${o.id ? `id="${o.id}"` : ''} style="${st}">${inner}</div>`;
         }
-        function prtL(text, span, bg, o) { o = Object.assign({}, o || {}); o.bg = bg; o.cls = 'prt-l ' + (o.cls || ''); return prtCell(text, span, o); }
+        const AM_GRUPOS = ["#D9A3C4", "#A9C79A", "#9FBCD6", "#E3A598", "#D6BC7E", "#B7AAD6", "#C9C3B8", "#8FBDB8", "#E6CD86", "#EDB38A", "#AFC0E3", "#B8D9A9"];
+        function prtL(text, span, bg, o) { o = Object.assign({}, o || {}); if (AM_GRUPOS.indexOf(bg) >= 0) { o.bg = bg; } else { o.bg = '#F1EEE7'; o.color = '#4A443A'; } o.cls = 'prt-l ' + (o.cls || ''); return prtCell(text, span, o); }
         function prtV(p, key) { return p[key] == null ? '' : p[key]; }
         function prtInHtml(key, val, o) {
             o = o || {};
@@ -4283,11 +4284,11 @@
         function prtBar(title, bg, color, p, vistoKey, o) {
             o = o || {};
             const right = (o.act ? prtActivo(p, o.act) : '') + (vistoKey ? prtVisto(p, vistoKey) : '');
-            return prtCell(`<span>${title}</span>${right ? `<span class="prt-right">${right}</span>` : ''}`, 24, { cls: 'prt-bar', bg, color, style: o.style });
+            const amNota = String(title).indexOf('NOTAS') === 0; return prtCell(`<span>${title}</span>${right ? `<span class="prt-right">${right}</span>` : ''}`, 24, { cls: 'prt-bar' + (amNota ? ' prt-bar-nota' : ''), bg: amNota ? '#E4EBDC' : '#3F5A2E', color: amNota ? '#2C4120' : '#FFF', style: o.style });
         }
         function prtNotes(p, key) { return prtCell(`<textarea class="prt-ta" oninput="prtSet('${key}', this.value)" placeholder="Escribe aquí las notas...">${escJsw(prtV(p, key))}</textarea>`, 24, { cls: 'prt-f' }); }
         function prtSep() { return `<div class="prt-sep"></div>`; }
-        function prtHead(text, span, bg, color) { return prtCell(text, span, { cls: 'prt-l center', bg, color: color || '#1F1B16', style: 'font-weight:900;' }); }
+        function prtHead(text, span, bg, color) { return prtCell(text, span, { cls: 'prt-l center', bg: AM_GRUPOS.indexOf(bg) >= 0 ? bg : '#E6DFD1', color: '#2F2A23', style: 'font-weight:800;' }); }
 
         // ---- 1. CABECERA + DATOS GENERALES ----
         function prtGeneralCells(ev, p) {
@@ -7055,6 +7056,6 @@
     </div>
     <div id="nb-modal" class="nb-modal nb-oculto"><div id="nb-modal-caja" class="nb-modal-caja"></div></div>
 
-    <script type="module" src="nube.js"></script>
+    <script type="module" src="nube.js?v=1795561871"></script>
 </body>
 </html>
