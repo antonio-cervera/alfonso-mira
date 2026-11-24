@@ -125,3 +125,32 @@ aside > .p-3.border-t.bg-white { background: transparent !important; border-colo
 
 /* Cabecera común de cada hoja e informe: negro cálido con detalle dorado */
 .inf-cab, .hoja-cab { background: linear-gradient(135deg, #1F1B16, #3A3226) !important; border-bottom: 3px solid var(--am-oro) !important; }
+
+/* ───── Estructura común de las hojas (protocolo, equipos, checklists…) ───── */
+main .font-black { font-weight: 800 !important; }
+.prt-grid, .jsw-grid { border: 1px solid #CFC6B4 !important; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(31,27,22,.06); }
+.prt-c, .jsw-c, .jsw-team-col, .prt-sub { border-color: #E1D9CA !important; }
+.prt-colrow, .jsw-team-row { border-color: #EDE7DC !important; }
+.prt-sep { border-top: 0 !important; background: var(--am-fondo) !important; height: 12px !important; }
+.prt-title { font-family: 'Fraunces', Georgia, serif !important; font-weight: 600 !important; font-size: 20px !important; letter-spacing: .02em !important; }
+.prt-bar { letter-spacing: .07em !important; font-size: 11.5px !important; min-height: 34px !important; }
+.prt-sel { background: #F1EEE7 !important; }
+.prt-in:focus, .prt-ta:focus, .jsw-input:focus { box-shadow: inset 0 0 0 2px var(--am-verde) !important; }
+.prt-sel:focus { box-shadow: 0 0 0 2px var(--am-verde) !important; }
+.prt-vb { border-color: #CFC6B4 !important; border-radius: 8px; }
+.inf-cab-t { font-family: 'Fraunces', Georgia, serif; font-weight: 600 !important; font-size: 22px !important; }
+.inf-logo { color: var(--am-oro) !important; }
+.inf-print-btn { background: var(--am-oro) !important; color: var(--am-tinta) !important; }
+.inf-h { color: var(--am-verde-osc) !important; }
+.inf-card, .inf-kpi { border-color: var(--am-borde) !important; border-radius: 14px !important; }
+main table { border-color: #E1D9CA; }
+main input:focus, main select:focus, main textarea:focus { --tw-ring-color: rgba(63,90,46,.35) !important; }
+
+/* Protocolo en el menú: mismo estilo que el resto de opciones */
+aside nav #tab-jsw-protocolo { background: transparent !important; color: #E6DFD1 !important; font-weight: 600 !important; }
+aside nav #tab-jsw-protocolo:hover { background: var(--am-menu2) !important; }
+aside nav #tab-jsw-protocolo.subnav-active, aside nav #tab-jsw-protocolo.nav-active { background: rgba(78,122,52,.35) !important; color: #fff !important; }
+.evi-tab, .evt-tab, .eva-tab { border: 1px solid #CFC6B4 !important; }
+.evi-tab td, .evt-tab td, .eva-tab td { border-color: #E1D9CA !important; }
+main .border-black { border-color: #CFC6B4 !important; }
+.evi-titulo, .eva-titulo { font-family: 'Fraunces', Georgia, serif; font-weight: 600 !important; letter-spacing: .02em; }
