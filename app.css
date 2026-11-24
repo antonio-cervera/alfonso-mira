@@ -114,9 +114,11 @@ table.tabla { width: 100%; border-collapse: collapse; font-size: 14px; min-width
 
 /* Expediente */
 .exp-cab { background: var(--blanco); border: 1px solid var(--borde); border-radius: 16px; padding: 18px 20px; margin-bottom: 16px; display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between; }
-.pestanas { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--borde); margin-bottom: 18px; }
-.pestana { padding: 12px 14px; border: none; background: none; border-bottom: 3px solid transparent; font-size: 14px; font-weight: 500; color: var(--suave); cursor: pointer; white-space: nowrap; }
-.pestana.activa { color: var(--verde-osc); font-weight: 700; border-bottom-color: var(--verde); }
+.pestanas { display: flex; flex-wrap: wrap; gap: 8px; background: var(--blanco); border: 1px solid var(--borde); border-radius: 16px; padding: 10px; margin-bottom: 18px; }
+.pestana { display: inline-flex; align-items: center; min-height: 42px; padding: 0 16px; border: 1px solid var(--borde2); border-radius: 10px; background: #FAF8F3; font-size: 14px; font-weight: 600; color: #4A443A; text-decoration: none; cursor: pointer; white-space: nowrap; transition: background .15s, color .15s, border-color .15s, box-shadow .15s; }
+.pestana:hover { background: var(--verde-claro); border-color: #C9D6BC; color: var(--verde-osc); }
+.pestana.activa { background: var(--verde); border-color: var(--verde); color: #fff; box-shadow: 0 6px 14px -8px rgba(44,65,32,.8); }
+.pestana:focus-visible { outline: 2px solid var(--ambar); outline-offset: 2px; }
 .bloque { background: var(--blanco); border: 1px solid var(--borde); border-radius: 16px; padding: 22px; margin-bottom: 16px; }
 .bloque h2 { font-family: var(--serif); font-weight: 500; font-size: 21px; margin: 0 0 14px; }
 .rejilla { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
@@ -135,6 +137,8 @@ table.tabla { width: 100%; border-collapse: collapse; font-size: 14px; min-width
   .cal-celda { min-height: 70px; padding: 4px; } .cal-chip { font-size: 10px; padding: 3px 4px; }
   .rejilla, .datos { grid-template-columns: repeat(1, minmax(0, 1fr)); }
   .titulo { font-size: 26px; }
+  .pestanas { flex-wrap: nowrap; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 }
+@media (prefers-reduced-motion: reduce) { .pestana { transition: none; } }
 @media (max-width: 520px) { .cal-anio { grid-template-columns: repeat(1, minmax(0, 1fr)); } }
 @media (prefers-reduced-motion: reduce) { .cal-mes { transition: none; } }
