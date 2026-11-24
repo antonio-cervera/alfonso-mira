@@ -902,6 +902,26 @@
     };
   };
 
+
+  // ═════════ «Imprimir todo» incluye las hojas nuevas ═════════
+  (function () {
+    const orig = window.pzGrupos;
+    if (typeof orig !== 'function') return;
+    window.pzGrupos = function () {
+      const g = orig.apply(this, arguments);
+      const paso = function (id, espera) { return { vista: '', espera: espera || 350, ir: function () { switchTab(id); }, src: function () { return document.getElementById('am-root-' + id); } }; };
+      const nuevos = [
+        { id: 'am-ceremonia', t: 'CEREMONIA', pasos: function () { return [paso('am-ceremonia')]; } },
+        { id: 'am-finca', t: 'FICHA DE LA FINCA', pasos: function () { const e = evActual(); return e && e.finca_token ? [paso('am-finca', 1500)] : []; } },
+        { id: 'am-planococtel', t: 'PLANO CÓCTEL', pasos: function () { const e = evActual(); return e && e.plano_coctel && (e.plano_coctel.items || []).length ? [paso('am-planococtel')] : []; } }
+      ].filter(function (x) { return x.pasos().length > 0; });
+      let i = g.findIndex(function (x) { return x.id === 'protocolo'; });
+      if (i < 0) i = g.length - 1;
+      g.splice.apply(g, [i + 1, 0].concat(nuevos));
+      return g;
+    };
+  })();
+
   // ═════════ Arranque (lo llama nube.js tras iniciar sesión) ═════════
   window.__mejorasArranque = function () {
     crearMenu();
