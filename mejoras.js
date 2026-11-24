@@ -84,6 +84,7 @@
   const VISTAS = {
     'am-planning': { titulo: 'PLANNING SEMANAL', nivel: 'top', render: function () { renderPlanning(); } },
     'am-personal': { titulo: 'PERSONAL', nivel: 'top', render: function () { renderDirectorio(); } },
+    'am-papelera': { titulo: 'PAPELERA', nivel: 'top', render: function () { renderPapelera(); } },
     'am-ceremonia': { titulo: 'CEREMONIA', nivel: 'jsw', render: function () { renderCeremonia(); } },
     'am-finca': { titulo: 'FICHA DE LA FINCA', nivel: 'jsw', render: function () { renderFinca(); } },
     'am-planococtel': { titulo: 'PLANO CÓCTEL', nivel: 'coord', render: function () { renderPlanoCoctel(); } }
@@ -93,7 +94,8 @@
     if (historico && !document.getElementById('tab-am-planning')) {
       historico.insertAdjacentHTML('afterend',
         '<button onclick="switchTab(\'am-planning\')" id="tab-am-planning" class="nav-btn"><i class="fa-solid fa-calendar-week w-6 text-center mr-2"></i> PLANNING SEMANAL</button>' +
-        '<button onclick="switchTab(\'am-personal\')" id="tab-am-personal" class="nav-btn am-solo-plan"><i class="fa-solid fa-address-book w-6 text-center mr-2"></i> PERSONAL</button>');
+        '<button onclick="switchTab(\'am-personal\')" id="tab-am-personal" class="nav-btn am-solo-plan"><i class="fa-solid fa-address-book w-6 text-center mr-2"></i> PERSONAL</button>' +
+        '<button onclick="switchTab(\'am-papelera\')" id="tab-am-papelera" class="nav-btn am-solo-admin"><i class="fa-solid fa-trash-can-arrow-up w-6 text-center mr-2"></i> PAPELERA</button>');
     }
     const sub = 'nav-btn py-1.5 px-3 text-xs text-gray-500';
     const prot = document.getElementById('tab-jsw-protocolo');
@@ -902,6 +904,41 @@
     };
   };
 
+
+
+  // ═════════ Papelera de bodas (30 días, solo administrador) ═════════
+  function diasDesde(ts) { if (!ts || typeof ts.toDate !== 'function') return 0; return Math.floor((Date.now() - ts.toDate().getTime()) / 86400000); }
+  async function renderPapelera() {
+    const root = document.getElementById('am-root-am-papelera');
+    let h = cabecera('PAPELERA', 'Bodas eliminadas · se pueden recuperar durante 30 días', false);
+    const a = api();
+    if (!a || !a.esAdmin()) { root.innerHTML = h + '<div class="am-bloque">Solo el administrador.</div>'; return; }
+    root.innerHTML = h + '<div class="am-bloque am-suave">Cargando…</div>';
+    let l = [];
+    try { l = await a.listar('eventos', 'papelera', true); } catch (e) { root.innerHTML = h + '<div class="am-bloque">No se ha podido leer la papelera.</div>'; return; }
+    // Borrado definitivo automático a los 30 días
+    const caducadas = l.filter(function (x) { return diasDesde(x.papeleraEn) > 30; });
+    for (let i = 0; i < caducadas.length; i++) { try { await a.borrar('eventos', caducadas[i].id); } catch (e) {} }
+    l = l.filter(function (x) { return diasDesde(x.papeleraEn) <= 30; }).sort(function (x, y) { return diasDesde(x.papeleraEn) - diasDesde(y.papeleraEn); });
+    h += '<div class="am-bloque am-sinpad"><table class="am-tabla"><thead><tr><th>Boda</th><th>Fecha</th><th>Eliminada hace</th><th>Se borra en</th><th></th></tr></thead><tbody>';
+    if (!l.length) h += '<tr><td colspan="5" class="am-vacio">La papelera está vacía.</td></tr>';
+    l.forEach(function (x) {
+      const d = diasDesde(x.papeleraEn);
+      h += '<tr><td><b>' + esc(x.boda || 'Sin nombre') + '</b></td><td>' + esc(fechaCorta(x.fecha)) + '</td><td>' + (d === 0 ? 'hoy' : d + ' día(s)') + '</td><td>' + (30 - d) + ' día(s)</td>' +
+        '<td class="am-acc"><button class="am-btn am-prin" onclick="amRecuperar(\'' + x.id + '\')">Recuperar</button><button class="am-btn am-peligro" onclick="amBorrarYa(\'' + x.id + '\')">Borrar ya</button></td></tr>';
+    });
+    root.innerHTML = h + '</tbody></table></div>';
+  }
+  window.amRecuperar = async function (id) {
+    await api().guardar('eventos', id, { papelera: false, session: 'papelera' });
+    aviso('Boda recuperada.');
+    try { cargarDatosIniciales(1); } catch (e) {}
+    renderPapelera();
+  };
+  window.amBorrarYa = async function (id) {
+    if (!confirm('¿Borrar esta boda definitivamente? No se podrá recuperar.')) return;
+    await api().borrar('eventos', id); aviso('Boda borrada definitivamente.'); renderPapelera();
+  };
 
   // ═════════ «Imprimir todo» incluye las hojas nuevas ═════════
   (function () {

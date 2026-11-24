@@ -161,6 +161,7 @@ main .border-black { border-color: #CFC6B4 !important; }
 /* ═════ Mejoras (vistas nuevas con el mismo diseño) ═════ */
 .am-oculto { display: none !important; }
 body.rol-sinplan .am-solo-plan { display: none !important; }
+body:not(.rol-admin) .am-solo-admin { display: none !important; }
 .am-vista { background: var(--am-fondo); padding: 28px 32px 60px; }
 .am-wrap { max-width: 1200px; margin: 0 auto; }
 .am-cab { margin-bottom: 18px; }
