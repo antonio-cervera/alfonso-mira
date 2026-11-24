@@ -49,12 +49,12 @@ body.rol-admin .nb-menu-usuarios { display: block; }
 .nb-salir:hover { background: var(--am-menu2); color: #fff; }
 
 /* ───── Pestañas: enmarcadas, la activa en verde con letras blancas ───── */
-main button.border-b-2 {
+main button.border-b-2, main button[id^="simple-"] {
   border: 1px solid var(--am-borde2) !important; border-radius: 10px !important; background: #FAF8F3 !important;
   padding: 9px 16px !important; margin: 0 2px 8px 0; color: #4A443A !important; font-weight: 700;
   transition: background .15s, color .15s, border-color .15s;
 }
-main button.border-b-2:hover { background: var(--am-verde-claro) !important; border-color: var(--am-verde-borde) !important; color: var(--am-verde-osc) !important; }
+main button.border-b-2:hover, main button[id^="simple-"]:hover { background: var(--am-verde-claro) !important; border-color: var(--am-verde-borde) !important; color: var(--am-verde-osc) !important; }
 main button.border-b-2.border-indigo-600 { background: var(--am-verde) !important; border-color: var(--am-verde) !important; color: #fff !important; box-shadow: 0 6px 14px -8px rgba(44,65,32,.8); }
 
 /* ───── Colores de acento: índigo → verde viña ───── */
