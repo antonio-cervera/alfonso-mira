@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1F1B16">
+  <title>Alfonso Mira · Planning</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <!-- Pantalla de carga -->
+  <div id="pantalla-carga" class="centro">
+    <div class="marca-grande">Alfonso Mira</div>
+    <div class="texto-suave">Cargando…</div>
+  </div>
+
+  <!-- Acceso -->
+  <div id="pantalla-login" class="centro oculto">
+    <div class="tarjeta login">
+      <div class="marca-grande">Alfonso Mira</div>
+      <div class="texto-suave">Eventos &amp; Celebraciones · Planning</div>
+      <button id="btn-google" class="btn btn-principal ancho">Entrar con Google</button>
+      <div class="separador"><span>o con correo</span></div>
+      <label class="campo">Correo<input id="login-email" type="email" autocomplete="username"></label>
+      <label class="campo">Contraseña<input id="login-pass" type="password" autocomplete="current-password"></label>
+      <button id="btn-email" class="btn btn-secundario ancho">Entrar</button>
+      <button id="btn-olvido" class="enlace">¿Has olvidado la contraseña?</button>
+      <p id="login-msg" class="mensaje"></p>
+    </div>
+  </div>
+
+  <!-- Pendiente de aprobación -->
+  <div id="pantalla-pendiente" class="centro oculto">
+    <div class="tarjeta login">
+      <div class="marca-grande">Alfonso Mira</div>
+      <p>Tu acceso está <b>pendiente de aprobación</b>.</p>
+      <p class="texto-suave">Avisa al administrador para que te asigne un rol. Esta pantalla se actualizará sola.</p>
+      <p class="texto-suave" id="pendiente-email"></p>
+      <button class="btn btn-secundario" data-accion="salir">Cerrar sesión</button>
+    </div>
+  </div>
+
+  <!-- Aplicación -->
+  <div id="app" class="oculto">
+    <nav id="menu" aria-label="Menú principal">
+      <div class="marca">
+        <div class="marca-nombre">Alfonso Mira</div>
+        <div class="marca-sub">Eventos &amp; Celebraciones</div>
+      </div>
+      <a href="#/calendario" data-vista="calendario" class="menu-item">Calendario</a>
+      <a href="#/historico" data-vista="historico" class="menu-item">Histórico</a>
+      <a href="#/usuarios" data-vista="usuarios" class="menu-item solo-admin">Usuarios</a>
+      <div class="menu-espacio"></div>
+      <div id="estado-sync" class="estado-sync"><span class="punto"></span><span class="txt">Conectando…</span></div>
+      <div class="usuario">
+        <div class="avatar" id="usuario-avatar">·</div>
+        <div class="usuario-datos">
+          <div id="usuario-nombre" class="usuario-nombre"></div>
+          <div id="usuario-rol" class="usuario-rol"></div>
+        </div>
+        <button class="btn-icono" data-accion="salir" title="Cerrar sesión" aria-label="Cerrar sesión">⎋</button>
+      </div>
+    </nav>
+    <main id="contenido"></main>
+  </div>
+
+  <!-- Ventana modal -->
+  <div id="modal" class="modal oculto" role="dialog" aria-modal="true">
+    <div class="modal-caja" id="modal-caja"></div>
+  </div>
+  <div id="popover" class="popover oculto"></div>
+  <div id="aviso" class="aviso oculto"></div>
+
+  <script src="firebase-config.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function me() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function hasProfile() { return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)); }
+    function rol() { return me().rol; }
+    function isAdmin() { return hasProfile() && rol() == 'admin'; }
+    function isStaff() { return hasProfile() && rol() in ['admin','coordinador','jefesala','cocina','camarero']; }
+    function canPlan() { return hasProfile() && rol() in ['admin','coordinador']; }
+
+    match /config/bootstrap {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && !exists(/databases/$(database)/documents/config/bootstrap)
+        && request.resource.data.adminUid == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /users/{uid} {
+      allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
+      allow create: if isAdmin() || (signedIn() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['nombre','email','rol','creado'])
+        && (request.resource.data.rol == 'pendiente'
+            || (request.resource.data.rol == 'admin'
+                && !exists(/databases/$(database)/documents/config/bootstrap))));
+      allow update: if isAdmin() || (request.auth.uid == uid && request.resource.data.rol == resource.data.rol);
+      allow delete: if isAdmin();
+    }
+
+    match /eventos/{id} {
+      allow read: if isStaff();
+      allow create: if canPlan() && request.resource.data.papelera == false;
+      // Solo el administrador puede enviar a la papelera o sacar de ella
+      allow update: if canPlan()
+        && (isAdmin() || request.resource.data.get('papelera', false) == resource.data.get('papelera', false));
+      allow delete: if isAdmin();
+    }
+  }
+}
