@@ -131,7 +131,14 @@
   })();
 
   // ═════════ NUE-01 y NUE-02 · Equipos desde Protocolo y fórmulas ═════════
-  const REGLAS_BASE = { altas_pct: 75, bandejas_por_mesa: 1, pax_por_bandeja_pasada: 25, pax_por_punto_jamon: 150, pax_por_pala: 20 };
+  // Reglas sacadas de las fórmulas del Excel original (HOJA DE EQUIPOS); se pueden cambiar en «Reglas de cálculo»
+  const REGLAS_BASE = {
+    pax_por_mesa_coctel: 10, altas_pct: 75, pax_por_lebrillo: 20, pax_por_lebrillo_completo: 18,
+    pax_por_punto_vino_jlv: 200, pax_por_punto_vino_catering: 150,
+    pax_por_unidad_jamon: 100, pax_por_punto_jamon: 150, pax_por_punto_quesos: 150,
+    pinchos_por_bandeja_mesa: 8, pinchos_por_bandeja_pasada: 10,
+    pinzas_por_plato_pinceado: 2, pax_por_pinza: 4, pescados_por_pala: 20
+  };
   let REGLAS = Object.assign({}, REGLAS_BASE);
   function p_(p, k) { return txt(p[k]); }
   function coctelMismo(p) { return p_(p, 'coctel_bebida').toUpperCase().indexOf('MISMO') === 0; }
@@ -149,7 +156,7 @@
     ['ig_resopo_ubi_jlv', 'res_ubi_jlv'], ['ig_resopo_pax', 'res_pax'], ['ig_resopo_ubi_cat', 'res_ubi_cat'],
     ['ig_jlv_coctel', 'esp_coctel_jlv'], ['ig_cat_coctel', 'esp_coctel_cat'], ['ig_jlv_banquete', 'esp_banquete_jlv'], ['ig_cat_banquete', 'esp_banquete_cat'],
     ['nsa_pasillo', 'pasillo'], ['nsa_presi_sola', 'presi_sola'], ['nsa_presi_pax', 'pax_presi'], ['nsa_presi_dcha', 'pax_presi_dcha'], ['nsa_presi_izda', 'pax_presi_izda'],
-    ['ncc_tipo_coctel', 'tipo_coctel'], ['ncc_taburetes', 'mob_taburetes'], ['ncc_taburetes_cant', 'mob_taburetes_cant'], ['nco_pinchos', 'n_pinchos'],
+    ['ncc_tipo_coctel', 'tipo_coctel'], ['nsa_mul_n_pescado', 'n_2opcion'], ['ncc_taburetes', 'mob_taburetes'], ['ncc_taburetes_cant', 'mob_taburetes_cant'], ['nco_pinchos', 'n_pinchos'],
     ['nbl_modalidad', 'bl_tipo'], ['nbl_horas', 'bl_horas_contratadas'], ['nbl_copas_mesa', 'bl_copas_mesa'], ['nbl_copas_horas', 'bl_cant_horas'],
     ['nbl_ubi_jlv', 'bl_ubi_jlv'], ['nbl_ubi_cat', 'bl_ubi_cat'], ['nbl_tipo_vaso', 'bl_tipo_vaso'],
     ['nbl_coct_tipo', 'coc_tipo'], ['nbl_coct_ubi', 'coc_ubicacion'], ['nbl_coct_hora', 'coc_hora_cita'], ['nbl_coct_contacto', 'coc_contacto'],
@@ -162,7 +169,9 @@
   // Ceremonia (NUE-04) → Equipos
   const MAPA_CER = [['ig_ceremonia', 'hay'], ['ig_hora_ceremonia', 'hora'], ['ig_recepcion_ceremonia', 'recepcion'], ['ig_recepcion_bebida', 'bebida'],
     ['ig_pasar_sillas', 'pasar_sillas'], ['ig_sillas_cantidad', 'sillas'], ['ig_jlv_ceremonia', 'espacio_jlv'], ['ig_cat_ceremonia', 'espacio_cat']];
-  const FUENTES_FORMULA = ['ncc_n_mesas', 'nsa_pinzas_1', 'nsa_pinzas_2', 'nsa_pinzas_pan', 'nsa_pinzas_otras', 'nsa_mul_n_pescado'];
+  const FUENTES_FORMULA = ['ncc_n_mesas', 'ncc_mesas_altas', 'ncc_tipo_coctel', 'ncc_vino_catering', 'nco_pinchos', 'nsa_pinceados_cant', 'nsa_rangos', 'nsa_con_pinza_cant',
+    'nsa_pinzas_1', 'nsa_pinzas_2', 'nsa_pinzas_pan', 'nsa_pinzas_otras', 'nsa_mul_n_pescado'];
+  const FORMULA_TXT = {};
 
   function autoRellenar(e) {
     if (!e) return [];
@@ -184,26 +193,60 @@
     MAPA.forEach(function (x) { poner(x[0], typeof x[1] === 'function' ? x[1](p) : p_(p, x[1])); });
     const cer = e.ceremonia || {};
     MAPA_CER.forEach(function (x) { poner(x[0], cer[x[1]]); });
-    // Fórmulas (reglas editables)
-    const tot = jswTotals(e);
-    const invitados = tot.invitados;
+    // Fórmulas (las del Excel original, con reglas editables)
+    const R = REGLAS;
+    const div = function (a, b) { return num(b) > 0 ? a / num(b) : 0; };
+    const arriba = function (v) { return v > 0 ? Math.ceil(v - 1e-9) : ''; };
+    const def = prtComensalesDef(p);
+    let inv = 0;
+    if (def.fila >= 0) inv = def.total + (parseInt(def.dudas, 10) || 0);
+    if (!inv) inv = jswTotals(e).invitados;
+    function calc(clave, valor, texto) { FORMULA_TXT[clave] = texto; poner(clave, valor); }
+    // Cóctel: mesas, altas/bajas, lebrillos, puntos de vino, ceniceros
+    const tipo = txt(m.ncc_tipo_coctel || p.tipo_coctel).toUpperCase();
+    const mesas = tipo && inv ? 2 * Math.ceil(div(inv, R.pax_por_mesa_coctel) / 2) : 0;
+    calc('ncc_n_mesas', mesas || '', 'Invitados ÷ ' + R.pax_por_mesa_coctel + ', redondeado al par superior (si hay tipo de cóctel)');
     const nMesas = num(m.ncc_n_mesas);
-    if (nMesas > 0) {
-      const altas = Math.round(nMesas * num(REGLAS.altas_pct) / 100);
-      poner('ncc_mesas_altas', altas); poner('ncc_mesas_bajas', nMesas - altas);
-      const b = num(REGLAS.bandejas_por_mesa);
-      poner('nco_bandejas_altas', altas * b); poner('nco_bandejas_bajas', (nMesas - altas) * b); poner('nco_bandejas_mesa', nMesas * b);
-    } else { ['ncc_mesas_altas', 'ncc_mesas_bajas', 'nco_bandejas_altas', 'nco_bandejas_bajas', 'nco_bandejas_mesa'].forEach(function (k) { poner(k, ''); }); }
-    poner('nco_bandejas_pasadas', invitados > 0 && num(REGLAS.pax_por_bandeja_pasada) > 0 ? Math.ceil(invitados / num(REGLAS.pax_por_bandeja_pasada)) : '');
-    const hayJamon = p_(p, 'jamon_tipo') !== '' || p_(p, 'jamon_unidades') !== '';
-    if (hayJamon && p_(p, 'jamon_puntos') === '' && invitados > 0 && num(REGLAS.pax_por_punto_jamon) > 0) {
-      const pj = Math.ceil(invitados / num(REGLAS.pax_por_punto_jamon));
-      poner('ncc_jamon_puntos', pj); poner('nco_jamon_puntos', pj);
-    }
-    const pinzas = ['nsa_pinzas_1', 'nsa_pinzas_2', 'nsa_pinzas_pan', 'nsa_pinzas_otras'].reduce(function (a, k) { return a + num(m[k]); }, 0);
-    poner('nsa_total_pinzas', pinzas > 0 ? pinzas : '');
+    const altasCalc = nMesas > 0 ? Math.round(nMesas * num(R.altas_pct) / 100) : '';
+    calc('ncc_mesas_altas', altasCalc, R.altas_pct + ' % de las mesas del cóctel');
+    const altas = num(m.ncc_mesas_altas);
+    calc('ncc_mesas_bajas', nMesas > 0 ? Math.max(0, nMesas - altas) : '', 'Mesas del cóctel − mesas altas');
+    const completo = tipo.indexOf('COMPLETO') >= 0;
+    calc('ncc_lebrillos', tipo && inv ? arriba(div(inv, completo ? R.pax_por_lebrillo_completo : R.pax_por_lebrillo)) : '',
+      'Invitados ÷ ' + R.pax_por_lebrillo + ' (÷ ' + R.pax_por_lebrillo_completo + ' si es menú completo), hacia arriba');
+    const vinoCat = txt(m.ncc_vino_catering) ? txt(m.ncc_vino_catering) === 'SI' : e.lugar_tipo === 'BODA FINCA';
+    calc('ncc_puntos_vino', inv ? Math.max(1, Math.round(div(inv, vinoCat ? R.pax_por_punto_vino_catering : R.pax_por_punto_vino_jlv))) : '',
+      'Invitados ÷ ' + R.pax_por_punto_vino_jlv + ' en JLV o ÷ ' + R.pax_por_punto_vino_catering + ' en catering');
+    calc('ncc_ceniceros', p_(p, 'fumar').toUpperCase() === 'SI' ? 'SI' : '', 'SI cuando en Protocolo se permite fumar');
+    // Showcooking: jamón y quesos
+    const hayJamon = p_(p, 'jamon_tipo') !== '' || p_(p, 'jamon_servicio') !== '';
+    ['ncc_', 'nco_'].forEach(function (pre) {
+      if (p_(p, 'jamon_unidades') === '') calc(pre + 'jamon_unidades', hayJamon && inv ? arriba(div(inv, R.pax_por_unidad_jamon)) : '', 'Invitados ÷ ' + R.pax_por_unidad_jamon + ', hacia arriba');
+      if (p_(p, 'jamon_puntos') === '') calc(pre + 'jamon_puntos', hayJamon && inv ? arriba(div(inv, R.pax_por_punto_jamon)) : '', 'Invitados ÷ ' + R.pax_por_punto_jamon + ', hacia arriba');
+      const hayQueso = p_(p, 'quesos_tipo') !== '' || p_(p, 'quesos_servicio') !== '';
+      if (p_(p, 'quesos_puntos') === '') calc(pre + 'quesos_puntos', hayQueso && inv ? arriba(div(inv, R.pax_por_punto_quesos)) : '', 'Invitados ÷ ' + R.pax_por_punto_quesos + ', hacia arriba');
+      else calc(pre + 'quesos_puntos', p_(p, 'quesos_puntos'), 'De Protocolo');
+    });
+    // Cocina: bandejas
+    const altasF = num(m.ncc_mesas_altas), bajasF = num(m.ncc_mesas_bajas);
+    calc('nco_bandejas_mesa', nMesas || '', 'Una bandeja por mesa del cóctel');
+    calc('nco_bandejas_altas', nMesas ? altasF : '', 'Mesas altas del cóctel');
+    calc('nco_bandejas_bajas', nMesas ? bajasF : '', 'Mesas bajas del cóctel');
+    const pinchos = num(m.nco_pinchos);
+    const pasadas = pinchos ? Math.max(0, Math.ceil(div(pinchos - num(m.nco_bandejas_mesa) * num(R.pinchos_por_bandeja_mesa), R.pinchos_por_bandeja_pasada))) : '';
+    calc('nco_bandejas_pasadas', pasadas, '(Pinchos − bandejas a mesa × ' + R.pinchos_por_bandeja_mesa + ') ÷ ' + R.pinchos_por_bandeja_pasada + ', hacia arriba');
+    // Sala: pinzas y palas
+    const rangos = num(m.nsa_rangos);
+    calc('nsa_pinzas_1', num(m.nsa_pinceados_cant) && rangos ? num(m.nsa_pinceados_cant) * num(R.pinzas_por_plato_pinceado) * rangos : '',
+      'Platos pinceados × ' + R.pinzas_por_plato_pinceado + ' × rangos');
+    calc('nsa_pinzas_2', num(m.nsa_con_pinza_cant) && inv ? arriba(num(m.nsa_con_pinza_cant) * div(inv, R.pax_por_pinza)) : '',
+      'Platos con pinza × invitados ÷ ' + R.pax_por_pinza + ', hacia arriba');
+    calc('nsa_pinzas_pan', rangos || '', 'Una por rango');
+    const total = ['nsa_pinzas_1', 'nsa_pinzas_2', 'nsa_pinzas_pan', 'nsa_pinzas_otras'].reduce(function (a2, k) { return a2 + num(m[k]); }, 0);
+    calc('nsa_total_pinzas', total || '', 'Pinceados + con pinza + pan + otras');
     const pescado = num(m.nsa_mul_n_pescado);
-    poner('nsa_platos_palas', pescado > 0 && num(REGLAS.pax_por_pala) > 0 ? Math.ceil(pescado / num(REGLAS.pax_por_pala)) : '');
+    calc('nsa_platos_palas', pescado ? arriba(div(pescado, R.pescados_por_pala)) : '', 'Nº de pescados ÷ ' + R.pescados_por_pala + ', hacia arriba');
+    calc('nsa_mul_cantidad', txt(m.nsa_mul_otras).toUpperCase().indexOf('S') === 0 && inv ? inv : '', 'Igual al nº de invitados (si hay otras muletillas)');
     return cambios;
   }
   function selectorCampo(clave) {
@@ -218,7 +261,7 @@
       if (txt(m[k]) !== txt(a[k])) return;
       vista.querySelectorAll(selectorCampo(k)).forEach(function (el) {
         el.classList.add('am-auto');
-        el.title = 'Automático (Protocolo, Ceremonia o cálculo). Escribe encima para corregirlo a mano.';
+        el.title = (FORMULA_TXT[k] ? 'Calculado: ' + FORMULA_TXT[k] : 'Viene de Protocolo o Ceremonia') + '. Escribe encima para corregirlo a mano.';
         if (el.tagName === 'SELECT' && el.value !== txt(m[k])) {
           if (!Array.prototype.some.call(el.options, function (o) { return o.value === txt(m[k]); })) el.insertAdjacentHTML('beforeend', '<option value="' + esc(m[k]) + '">' + esc(m[k]) + '</option>');
           el.value = txt(m[k]);
@@ -233,18 +276,30 @@
     cont.insertAdjacentHTML('afterbegin', '<div class="am-barra-auto"><span><i class="fa-solid fa-wand-magic-sparkles"></i> Los campos en <b class="am-muestra">verde claro</b> se rellenan solos desde Protocolo, Ceremonia o con las fórmulas. Si escribes encima, manda tu valor.</span>' +
       (puedePlan() ? '<button onclick="amReglas()" class="am-btn">Reglas de cálculo</button>' : '') + '</div>');
   }
+  const REGLAS_TXT = [
+    ['Cóctel', [['pax_por_mesa_coctel', 'Invitados por mesa de cóctel', 'Nº de mesas = invitados ÷ este número, redondeado al par superior.'],
+      ['altas_pct', 'Mesas altas (%)', 'El resto son bajas. Se puede corregir el nº de altas a mano.'],
+      ['pax_por_lebrillo', 'Invitados por lebrillo', 'Cóctel corto, medio o largo.'], ['pax_por_lebrillo_completo', 'Invitados por lebrillo (menú completo)', ''],
+      ['pax_por_punto_vino_jlv', 'Invitados por punto de vino en JLV', ''], ['pax_por_punto_vino_catering', 'Invitados por punto de vino en catering', '']]],
+    ['Showcooking', [['pax_por_unidad_jamon', 'Invitados por jamón', 'Solo si hay jamón y Protocolo no indica las unidades.'],
+      ['pax_por_punto_jamon', 'Invitados por punto de jamón', ''], ['pax_por_punto_quesos', 'Invitados por punto de quesos', '']]],
+    ['Cocina', [['pinchos_por_bandeja_mesa', 'Pinchos por bandeja a mesa', 'Se descuentan de los pinchos antes de calcular las pasadas.'],
+      ['pinchos_por_bandeja_pasada', 'Pinchos por bandeja pasada', 'Pasadas = (pinchos − bandejas a mesa × pinchos por bandeja) ÷ este número.']]],
+    ['Sala', [['pinzas_por_plato_pinceado', 'Pinzas por plato pinceado', 'Pinzas = platos pinceados × este número × rangos. Pan: 1 por rango.'],
+      ['pax_por_pinza', 'Invitados por pinza (platos con pinza)', 'Pinzas = platos con pinza × invitados ÷ este número.'],
+      ['pescados_por_pala', 'Pescados por plato de palas', 'Platos de palas = nº de pescados ÷ este número.']]]
+  ];
   window.amReglas = function () {
     const r = REGLAS;
-    const f = function (k, l, ayuda) { return '<label class="am-campo">' + l + '<input type="number" min="0" step="1" id="am-r-' + k + '" value="' + esc(r[k]) + '"><small>' + ayuda + '</small></label>'; };
-    modal('<div class="am-modal-cab"><h2>Reglas de cálculo</h2><button class="am-x" data-am-cerrar>✕</button></div>' +
-      '<p class="am-suave">Se aplican a todas las bodas. Los valores calculados siempre se pueden corregir a mano en cada boda.</p>' +
-      f('altas_pct', 'Mesas altas en el cóctel (%)', 'El resto son mesas bajas. Excel: 75 % altas / 25 % bajas.') +
-      f('bandejas_por_mesa', 'Bandejas por mesa de cóctel', 'Bandejas a mesas altas y bajas = mesas × este número.') +
-      f('pax_por_bandeja_pasada', 'Invitados por bandeja pasada', 'Bandejas pasadas = invitados ÷ este número (redondeo hacia arriba).') +
-      f('pax_por_punto_jamon', 'Invitados por punto de jamón', 'Solo si hay jamón y Protocolo no indica los puntos.') +
-      f('pax_por_pala', 'Platos de pescado por plato de palas', 'Platos de palas = nº pescado ÷ este número.') +
-      '<p class="am-suave">Total de pinzas = suma de pinzas de pinceados, con pinza, pan y otras.</p>' +
-      '<div class="am-fila am-fin"><button class="am-btn" onclick="amReglasBase()">Valores iniciales</button><button class="am-btn am-prin" onclick="amReglasGuardar()">Guardar</button></div>');
+    let h = '<div class="am-modal-cab"><h2>Reglas de cálculo</h2><button class="am-x" data-am-cerrar>✕</button></div>' +
+      '<p class="am-suave">Son las fórmulas de la Hoja de Equipos del Excel original. Se aplican a todas las bodas y cada valor calculado se puede corregir a mano. «Invitados» = número definitivo de Protocolo (adultos, niños, cadetes, staff y dudas); si no está, los pax del plano.</p>';
+    REGLAS_TXT.forEach(function (g) {
+      h += '<h3 class="am-reglas-h">' + g[0] + '</h3><div class="am-reglas">';
+      g[1].forEach(function (x) { h += '<label class="am-campo">' + x[1] + '<input type="number" min="0" step="1" id="am-r-' + x[0] + '" value="' + esc(r[x[0]]) + '">' + (x[2] ? '<small>' + x[2] + '</small>' : '') + '</label>'; });
+      h += '</div>';
+    });
+    h += '<div class="am-fila am-fin"><button class="am-btn" onclick="amReglasBase()">Valores del Excel</button><button class="am-btn am-prin" onclick="amReglasGuardar()">Guardar</button></div>';
+    modal(h);
   };
   window.amReglasBase = function () { Object.keys(REGLAS_BASE).forEach(function (k) { const i = document.getElementById('am-r-' + k); if (i) i.value = REGLAS_BASE[k]; }); };
   window.amReglasGuardar = function () {
