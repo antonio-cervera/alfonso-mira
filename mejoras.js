@@ -494,6 +494,35 @@
   envolver('renderCanvas', null, function () { pintarRangos(); pintarAviso(null, 'plano-auto-bar', 'am-aviso-com-plano'); });
   envolver('switchPlanoMode', null, function () { pintarRangos(); });
 
+
+  // ═════════ Estrella de menús especiales por mesa, calculada desde Protocolo (PLA-19) ═════════
+  function especialesPorMesa(e) {
+    const p = e.protocolo || {}, cuenta = {};
+    Object.keys(p).forEach(function (k) {
+      if (k.indexOf('me_') !== 0 || k.slice(-7) !== '_nombre' || !txt(p[k])) return;
+      const mesa = txt(p[k.slice(0, -7) + '_mesa']).toUpperCase();
+      if (!mesa) return;
+      const clave = mesa.indexOf('PRESI') === 0 ? 'PRESIDENCIAL' : mesa;
+      cuenta[clave] = (cuenta[clave] || 0) + 1;
+    });
+    return cuenta;
+  }
+  function sincronizarEspeciales() {
+    const e = evActual(); if (!e) return false;
+    const c = especialesPorMesa(e);
+    const hay = Object.keys(c).length > 0;
+    let cambio = false;
+    (e.items || []).forEach(function (i) {
+      if (i.entity !== 'mesa' || i.isStaff) return;
+      const lab = i.isPresidencial ? 'PRESIDENCIAL' : String(i.calcNumber || i.numFijo || '');
+      const n = c[lab] || 0;
+      if (hay && (i._espAuto || !i.especiales) && i.especiales !== n) { i.especiales = n; i._espAuto = true; cambio = true; }
+      else if (!hay && i._espAuto && i.especiales) { i.especiales = 0; cambio = true; }
+    });
+    return cambio;
+  }
+  envolver('renderCanvas', function () { if (sincronizarEspeciales()) guardarEv(); }, null);
+
   // ═════════ NUE-04 · Ceremonia ═════════
   function cer() { const e = evActual(); if (!e.ceremonia || typeof e.ceremonia !== 'object') e.ceremonia = {}; return e.ceremonia; }
   function cI(k, label, tipo, ancho) { const c = cer(); return '<label class="am-campo' + (ancho ? ' am-' + ancho : '') + '">' + label + '<input type="' + (tipo || 'text') + '" data-cer="' + k + '" value="' + esc(c[k]) + '"></label>'; }
