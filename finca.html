@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1F1B16">
+  <meta name="robots" content="noindex">
+  <title>Ficha de la finca · Alfonso Mira</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --fondo: #F6F3EC; --tinta: #1F1B16; --suave: #6B6356; --borde: #E6DFD1; --verde: #3F5A2E; --verde-osc: #2C4120; --oro: #C9A66B; --terra: #B3471E; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: 'Inter', system-ui, sans-serif; background: var(--fondo); color: var(--tinta); }
+    header { background: linear-gradient(135deg, #1F1B16, #3A3226); border-bottom: 3px solid var(--oro); color: #fff; padding: 22px 20px; }
+    header .marca { font-family: 'Fraunces', Georgia, serif; font-size: 13px; letter-spacing: .3em; color: var(--oro); }
+    header h1 { font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 26px; margin: 6px 0 2px; }
+    header p { margin: 0; opacity: .8; font-size: 14px; }
+    main { max-width: 860px; margin: 0 auto; padding: 18px 14px 80px; }
+    .bloque { background: #fff; border: 1px solid var(--borde); border-radius: 14px; padding: 18px; margin-bottom: 14px; }
+    .bloque h2 { font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 19px; margin: 0 0 12px; color: var(--verde-osc); }
+    .rejilla { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+    label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; font-weight: 700; color: var(--suave); text-transform: uppercase; letter-spacing: .04em; }
+    label.total { grid-column: 1 / -1; }
+    input, select, textarea { font: inherit; font-size: 16px; font-weight: 500; color: var(--tinta); text-transform: none; letter-spacing: 0; border: 1px solid #DED6C6; border-radius: 10px; padding: 10px 12px; background: #fff; min-height: 46px; }
+    textarea { min-height: 84px; resize: vertical; }
+    input:focus, select:focus, textarea:focus { outline: 2px solid var(--verde); outline-offset: 1px; }
+    .btn { min-height: 48px; padding: 0 20px; border-radius: 10px; border: 1px solid #CFC6B4; background: #fff; font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; color: var(--tinta); }
+    .prin { background: var(--verde); border-color: var(--verde); color: #fff; }
+    .fila { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; align-items: center; }
+    canvas { width: 100%; height: 180px; border: 1px dashed #CFC6B4; border-radius: 10px; background: #FAF8F3; touch-action: none; }
+    .msg { font-weight: 700; font-size: 14px; margin: 10px 0 0; min-height: 20px; }
+    .ok { color: var(--verde); } .ko { color: var(--terra); }
+    .estado { background: #EEF2E8; color: var(--verde-osc); border-radius: 12px; padding: 12px 14px; font-weight: 600; font-size: 14px; margin-bottom: 14px; }
+    .barra { position: fixed; left: 0; right: 0; bottom: 0; background: rgba(246,243,236,.96); border-top: 1px solid var(--borde); padding: 10px 14px; }
+    .barra .fila { max-width: 860px; margin: 0 auto; }
+    @media (max-width: 640px) { .rejilla { grid-template-columns: 1fr; } header h1 { font-size: 22px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="marca">ALFONSO MIRA</div>
+    <h1 id="titulo">Ficha de la finca</h1>
+    <p>Eventos &amp; Celebraciones · Rellene los datos de su finca. Se guardan para próximos eventos.</p>
+  </header>
+  <main id="contenido"><div class="bloque">Cargando…</div></main>
+  <div class="barra" id="barra" hidden><div class="fila"><span class="msg" id="msg"></span><button class="btn" id="guardar">Guardar borrador</button></div></div>
+
+  <script src="firebase-config.js"></script>
+  <script src="ficha_campos.js"></script>
+  <script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js';
+    import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
+    const db = getFirestore(initializeApp(window.FIREBASE_CONFIG));
+    const $ = function (id) { return document.getElementById(id); };
+    function esc(v) { return String(v === undefined || v === null ? '' : v).split('&').join('&amp;').split('<').join('&lt;').split('>').join('&gt;').split('"').join('&quot;'); }
+    const token = new URLSearchParams(location.search).get('f') || '';
+    let datos = null;
+
+    async function cargar() {
+      if (!token) { $('contenido').innerHTML = '<div class="bloque">El enlace no es válido. Pida uno nuevo a Alfonso Mira.</div>'; return; }
+      try {
+        const s = await getDoc(doc(db, 'fincas', token));
+        if (!s.exists()) { $('contenido').innerHTML = '<div class="bloque">El enlace no es válido o ha caducado. Pida uno nuevo a Alfonso Mira.</div>'; return; }
+        datos = s.data();
+      } catch (e) { $('contenido').innerHTML = '<div class="bloque">No se ha podido abrir la ficha. Compruebe su conexión e inténtelo de nuevo.</div>'; return; }
+      pintar();
+    }
+    function pintar() {
+      const f = datos.ficha || {};
+      $('titulo').textContent = 'Ficha de la finca · ' + (datos.nombre || '');
+      let h = datos.firmadoEn ? '<div class="estado">Ficha firmada por ' + esc(datos.firmadoPor) + ' el ' + esc(datos.firmadoEn) + '. Puede corregirla y volver a firmar si algo cambia.</div>' : '';
+      window.AM_FICHA_FINCA.forEach(function (sec) {
+        h += '<section class="bloque"><h2>' + esc(sec.titulo) + '</h2><div class="rejilla">';
+        sec.campos.forEach(function (c) {
+          const v = f[c[0]] === undefined ? '' : f[c[0]];
+          if (c[2] === 'texto') h += '<label class="total">' + esc(c[1]) + '<textarea data-k="' + c[0] + '">' + esc(v) + '</textarea></label>';
+          else if (c[2] === 'sino') h += '<label>' + esc(c[1]) + '<select data-k="' + c[0] + '"><option></option><option' + (v === 'SI' ? ' selected' : '') + '>SI</option><option' + (v === 'NO' ? ' selected' : '') + '>NO</option></select></label>';
+          else h += '<label>' + esc(c[1]) + '<input type="' + c[2] + '" data-k="' + c[0] + '" value="' + esc(v) + '"' + (c[2] === 'tel' ? ' inputmode="tel"' : '') + '></label>';
+        });
+        h += '</div></section>';
+      });
+      h += '<section class="bloque"><h2>Firma de conformidad</h2><div class="rejilla"><label class="total">Nombre de quien firma<input id="firmante" value="' + esc(datos.firmadoPor || '') + '"></label></div>' +
+        '<p style="font-size:13px;color:#6B6356">Firme con el dedo o el ratón:</p><canvas id="firma" width="800" height="220"></canvas>' +
+        '<div class="fila" style="margin-top:10px"><button class="btn" id="limpiar">Borrar firma</button><button class="btn prin" id="firmar">Firmar y enviar</button></div><p class="msg" id="msg2"></p></section>';
+      $('contenido').innerHTML = h;
+      $('barra').hidden = false;
+      firma();
+      $('limpiar').onclick = function () { const c = $('firma'); c.getContext('2d').clearRect(0, 0, c.width, c.height); c.dataset.trazo = ''; };
+      $('firmar').onclick = function () { guardar(true); };
+    }
+    function recoger() { const f = Object.assign({}, datos.ficha || {}); document.querySelectorAll('[data-k]').forEach(function (el) { f[el.getAttribute('data-k')] = el.value; }); return f; }
+    async function guardar(conFirma) {
+      const m = conFirma ? $('msg2') : $('msg');
+      const cambios = { ficha: recoger(), actualizado: serverTimestamp() };
+      if (conFirma) {
+        const nombre = $('firmante').value.trim();
+        if (!nombre) { m.className = 'msg ko'; m.textContent = 'Escriba el nombre de quien firma.'; return; }
+        if (!$('firma').dataset.trazo) { m.className = 'msg ko'; m.textContent = 'Falta la firma.'; return; }
+        const d = new Date();
+        cambios.firma = $('firma').toDataURL('image/png');
+        cambios.firmadoPor = nombre.toUpperCase();
+        cambios.firmadoEn = ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '/' + d.getFullYear() + ' a las ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+      }
+      m.className = 'msg'; m.textContent = 'Guardando…';
+      try {
+        await updateDoc(doc(db, 'fincas', token), cambios);
+        Object.assign(datos, cambios);
+        m.className = 'msg ok'; m.textContent = conFirma ? '¡Gracias! La ficha se ha firmado y enviado.' : 'Borrador guardado.';
+      } catch (e) { m.className = 'msg ko'; m.textContent = 'No se ha podido guardar. Inténtelo de nuevo.'; }
+    }
+    $('guardar').onclick = function () { guardar(false); };
+    function firma() {
+      const c = $('firma'), x = c.getContext('2d');
+      x.lineWidth = 2.5; x.lineCap = 'round'; x.strokeStyle = '#1F1B16';
+      let dib = false;
+      function pos(e) { const r = c.getBoundingClientRect(); return { x: (e.clientX - r.left) * c.width / r.width, y: (e.clientY - r.top) * c.height / r.height }; }
+      c.addEventListener('pointerdown', function (e) { dib = true; const p = pos(e); x.beginPath(); x.moveTo(p.x, p.y); c.setPointerCapture(e.pointerId); });
+      c.addEventListener('pointermove', function (e) { if (!dib) return; const p = pos(e); x.lineTo(p.x, p.y); x.stroke(); c.dataset.trazo = '1'; });
+      c.addEventListener('pointerup', function () { dib = false; });
+    }
+    cargar();
+  </script>
+</body>
+</html>

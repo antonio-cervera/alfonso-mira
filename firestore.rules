@@ -22,6 +22,24 @@ service cloud.firestore {
       allow read, write: if canPlan();
     }
 
+    match /config/reglas {
+      allow read: if isStaff();
+      allow write: if canPlan();
+    }
+
+    match /personal/{id} {
+      allow read: if isStaff();
+      allow write: if canPlan();
+    }
+
+    // Ficha de la finca: la finca la rellena con su enlace secreto, sin cuenta
+    match /fincas/{token} {
+      allow get: if true;
+      allow list, create, delete: if canPlan();
+      allow update: if canPlan()
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['ficha', 'firma', 'firmadoPor', 'firmadoEn', 'actualizado']);
+    }
+
     match /users/{uid} {
       allow read: if signedIn() && (request.auth.uid == uid || isAdmin());
       allow create: if isAdmin() || (signedIn() && request.auth.uid == uid

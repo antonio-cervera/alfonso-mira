@@ -10,7 +10,7 @@ import {
 import {
   initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
   doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, collection, onSnapshot, writeBatch,
-  serverTimestamp, deleteField, FieldPath
+  serverTimestamp, deleteField, FieldPath, query, where
 } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
 
 const app = initializeApp(window.FIREBASE_CONFIG);
@@ -240,6 +240,30 @@ window.__backend = {
   }
 };
 
+
+// ───────── API sencilla para las mejoras (mejoras.js) ─────────
+window.__am = {
+  rol: function () { return rol(); },
+  uid: function () { return S.user ? S.user.uid : ''; },
+  nombre: function () { return S.perfil ? S.perfil.nombre : ''; },
+  puedePlanificar: puedePlanificar, puedeEditar: puedeEditar, esAdmin: esAdmin, aviso: aviso,
+  leer: async function (col, id) { const s = await getDoc(doc(db, col, id)); return s.exists() ? s.data() : null; },
+  guardar: async function (col, id, datos, sustituir) {
+    datos = Object.assign({}, datos, { actualizado: serverTimestamp() });
+    await escribir(setDoc(doc(db, col, id), datos, sustituir ? {} : { merge: true }));
+    return true;
+  },
+  listar: async function (col, campo, valor) {
+    const ref = campo ? query(collection(db, col), where(campo, '==', valor)) : collection(db, col);
+    const qs = await getDocs(ref);
+    const l = [];
+    qs.forEach(function (s) { const x = s.data(); x.id = s.id; l.push(x); });
+    return l;
+  },
+  borrar: async function (col, id) { await escribir(deleteDoc(doc(db, col, id))); return true; },
+  nuevoId: function () { return doc(collection(db, 'fincas')).id + doc(collection(db, 'fincas')).id.substring(0, 6); }
+};
+
 // ───────── Cambios de otros dispositivos en tiempo real ─────────
 function editandoAhora() {
   const a = document.activeElement;
@@ -390,6 +414,7 @@ function arrancar() {
   pantalla(null);
   pintarNube();
   window.__arrancarLegado();
+  try { if (window.__mejorasArranque) window.__mejorasArranque(); } catch (e) { console.warn('Mejoras', e); }
   setTimeout(escucharCambios, 1500);
 }
 
