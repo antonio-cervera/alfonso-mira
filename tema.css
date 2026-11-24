@@ -116,3 +116,12 @@ body:not(.rol-sinplan) #tab-costes .fa-lock, body:not(.rol-sinplan) #tab-puntos 
 .nb-leyenda td { padding: 3px 10px 3px 0; vertical-align: top; }
 
 @media (prefers-reduced-motion: reduce) { main button.border-b-2 { transition: none; } }
+
+/* Indicador de guardado de la app (abajo del menú): integrado en el menú oscuro */
+aside > .p-3.border-t.bg-white { background: transparent !important; border-color: #3A342C !important; padding: 6px 12px 0 !important; }
+#loader-ok { display: none !important; }
+#loader { color: var(--am-ambar) !important; }
+#loader-error { color: #F0A58A !important; }
+
+/* Cabecera común de cada hoja e informe: negro cálido con detalle dorado */
+.inf-cab, .hoja-cab { background: linear-gradient(135deg, #1F1B16, #3A3226) !important; border-bottom: 3px solid var(--am-oro) !important; }
