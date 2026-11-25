@@ -86,6 +86,7 @@
     'am-misbodas': { titulo: 'MIS BODAS', nivel: 'top', render: function () { renderMisBodas(); } },
     'am-personal': { titulo: 'PERSONAL', nivel: 'top', render: function () { renderDirectorio(); } },
     'am-papelera': { titulo: 'PAPELERA', nivel: 'top', render: function () { renderPapelera(); } },
+    'am-copias': { titulo: 'COPIA DE SEGURIDAD', nivel: 'top', render: function () { renderCopias(); } },
     'am-ceremonia': { titulo: 'CEREMONIA', nivel: 'jsw', render: function () { renderCeremonia(); } },
     'am-finca': { titulo: 'FICHA DE LA FINCA', nivel: 'jsw', render: function () { renderFinca(); } },
     'am-minutas': { titulo: 'MINUTAS PARA IMPRIMIR', nivel: 'jsw', render: function () { renderMinutas(); } },
@@ -101,7 +102,8 @@
         '<button onclick="switchTab(\'am-planning\')" id="tab-am-planning" class="nav-btn"><i class="fa-solid fa-calendar-week w-6 text-center mr-2"></i> PLANNING SEMANAL</button>' +
         '<button onclick="switchTab(\'am-cronograma\')" id="tab-am-cronograma" class="nav-btn"><i class="fa-solid fa-list-check w-6 text-center mr-2"></i> CRONOGRAMA LOGÍSTICA</button>' +
         '<button onclick="switchTab(\'am-personal\')" id="tab-am-personal" class="nav-btn am-solo-plan"><i class="fa-solid fa-address-book w-6 text-center mr-2"></i> PERSONAL</button>' +
-        '<button onclick="switchTab(\'am-papelera\')" id="tab-am-papelera" class="nav-btn am-solo-admin"><i class="fa-solid fa-trash-can-arrow-up w-6 text-center mr-2"></i> PAPELERA</button>');
+        '<button onclick="switchTab(\'am-papelera\')" id="tab-am-papelera" class="nav-btn am-solo-admin"><i class="fa-solid fa-trash-can-arrow-up w-6 text-center mr-2"></i> PAPELERA</button>' +
+        '<button onclick="switchTab(\'am-copias\')" id="tab-am-copias" class="nav-btn am-solo-admin"><i class="fa-solid fa-shield-halved w-6 text-center mr-2"></i> COPIA DE SEGURIDAD</button>');
     }
     const sub = 'nav-btn py-1.5 px-3 text-xs text-gray-500';
     const prot = document.getElementById('tab-jsw-protocolo');
@@ -1591,6 +1593,105 @@
   window.amMbFiltro = function (v) { mbFiltro = v; renderMisBodas(); const i = document.querySelector('#am-root-am-misbodas .am-buscar'); if (i) { i.focus(); i.setSelectionRange(v.length, v.length); } };
   window.amMbAnio = function (v) { mbAnio = v; renderMisBodas(); };
 
+  // ═════════ Copia de seguridad (solo administración) ═════════
+  // Firebase gratuito no guarda copias automáticas: esto descarga TODO a un archivo y permite restaurarlo.
+  const CP_COLECCIONES = ['eventos', 'personal', 'fincas', 'cronograma', 'puntos_mejora'];
+  const CP_CONFIG = ['costes', 'reglas', 'cronograma'];
+  function fechaLarga(d) { return d.getDate() + ' de ' + MESES[d.getMonth()] + ' de ' + d.getFullYear() + ' a las ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
+  function aFecha(v) { if (!v) return null; if (typeof v.toDate === 'function') return v.toDate(); if (v.seconds !== undefined) return new Date(v.seconds * 1000); const d = new Date(v); return isNaN(d) ? null : d; }
+  // Las fechas guardadas ({seconds, nanoseconds}) vuelven a ser fechas al restaurar
+  function revivir(o) {
+    if (Array.isArray(o)) return o.map(revivir);
+    if (o && typeof o === 'object') {
+      const k = Object.keys(o);
+      if (k.indexOf('seconds') >= 0 && k.indexOf('nanoseconds') >= 0 && k.length <= 3) return new Date(o.seconds * 1000 + Math.round(o.nanoseconds / 1e6));
+      const r = {}; k.forEach(function (x) { r[x] = revivir(o[x]); }); return r;
+    }
+    return o;
+  }
+  async function renderCopias() {
+    const root = document.getElementById('am-root-am-copias');
+    let info = null; try { info = await api().leer('config', 'backup'); } catch (e) {}
+    const ult = info ? aFecha(info.ultima) : null;
+    const dias = ult ? Math.floor((Date.now() - ult.getTime()) / 86400000) : null;
+    let h = cabecera('COPIA DE SEGURIDAD', 'Todas las bodas, costes, personal, fincas y configuración en un archivo', false);
+    h += '<div class="am-ctl-kpis"><div class="am-ctl-kpi' + (dias !== null && dias <= 7 ? ' ok' : ' mal') + '"><span>ÚLTIMA COPIA</span><b>' + (ult ? esc(fechaLarga(ult)) : 'Nunca') + '</b></div>' +
+      '<div class="am-ctl-kpi"><span>HACE</span><b>' + (dias === null ? '—' : dias + (dias === 1 ? ' día' : ' días')) + '</b></div></div>';
+    h += '<div class="am-bloque"><p>Firebase, en el plan gratuito, <b>no guarda copias automáticas</b>. La papelera recupera bodas borradas durante 30 días, pero si un dato se estropea o se borra de la papelera, solo esta copia permite recuperarlo.</p>' +
+      '<p class="am-suave">Recomendado: una copia cada semana, guardada en Google Drive o en un pendrive. La app te avisa si pasan más de 7 días.</p>' +
+      '<div class="am-fila"><button class="am-btn am-prin" onclick="amCopiaDescargar(this)"><i class="fa-solid fa-download mr-1"></i>Descargar copia ahora</button>' +
+      '<label class="am-btn"><i class="fa-solid fa-upload mr-1"></i>Restaurar desde un archivo<input type="file" accept=".json" class="am-oculto" onchange="amCopiaRestaurar(this)"></label></div></div>';
+    root.innerHTML = h;
+  }
+  window.amCopiaDescargar = async function (btn) {
+    const a = api(); if (!a || !a.esAdmin()) return;
+    if (btn) { btn.disabled = true; btn.textContent = 'Preparando la copia…'; }
+    try {
+      const copia = { app: 'Alfonso Mira · Planning', version: 1, creada: new Date().toISOString(), por: a.nombre(), colecciones: {}, config: {} };
+      for (let i = 0; i < CP_COLECCIONES.length; i++) {
+        const c = CP_COLECCIONES[i]; let l = [];
+        try { l = await a.listar(c); } catch (e) { l = []; }
+        copia.colecciones[c] = l;
+      }
+      for (let i = 0; i < CP_CONFIG.length; i++) { try { const d = await a.leer('config', CP_CONFIG[i]); if (d) copia.config[CP_CONFIG[i]] = d; } catch (e) {} }
+      const blob = new Blob([JSON.stringify(copia)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob), el = document.createElement('a');
+      const d = new Date();
+      el.href = url; el.download = 'Copia Alfonso Mira ' + isoDe(d) + ' ' + ('0' + d.getHours()).slice(-2) + 'h' + ('0' + d.getMinutes()).slice(-2) + '.json';
+      document.body.appendChild(el); el.click(); el.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+      await a.guardar('config', 'backup', { ultima: d, por: a.nombre(), bodas: copia.colecciones.eventos.length });
+      aviso('Copia descargada: ' + copia.colecciones.eventos.length + ' bodas y ' + Math.round(blob.size / 1024) + ' KB.');
+    } catch (e) { aviso('No se ha podido hacer la copia: ' + (e.message || e), true); }
+    renderCopias();
+  };
+  let cpPend = null;
+  window.amCopiaRestaurar = async function (inp) {
+    const f = inp.files && inp.files[0]; inp.value = ''; if (!f) return;
+    try {
+      const c = JSON.parse(await f.text());
+      if (!c || !c.colecciones || !Array.isArray(c.colecciones.eventos)) { aviso('Ese archivo no es una copia de esta app.', true); return; }
+      cpPend = c;
+      const n = function (k) { return (c.colecciones[k] || []).length; };
+      modal('<div class="am-modal-cab"><h2>Restaurar copia</h2><button class="am-x" data-am-cerrar>✕</button></div>' +
+        '<p>Copia del <b>' + esc(fechaLarga(new Date(c.creada))) + '</b> hecha por ' + esc(c.por || '—') + '.</p>' +
+        '<div class="am-ctl-kpis"><div class="am-ctl-kpi"><span>BODAS</span><b>' + n('eventos') + '</b></div><div class="am-ctl-kpi"><span>PERSONAL</span><b>' + n('personal') + '</b></div><div class="am-ctl-kpi"><span>FINCAS</span><b>' + n('fincas') + '</b></div><div class="am-ctl-kpi"><span>SEMANAS CRONOGRAMA</span><b>' + n('cronograma') + '</b></div></div>' +
+        '<p><b>Atención:</b> cada boda y cada dato de la copia sustituye a su versión actual. Lo que se haya creado después de la copia y no esté en ella se queda como está.</p>' +
+        '<label class="am-mn-chk"><input type="checkbox" id="am-cp-solo-bodas"> Restaurar solo las bodas</label>' +
+        '<div class="am-fila am-fin"><button class="am-btn" data-am-cerrar>Cancelar</button><button class="am-btn am-peligro" onclick="amCopiaAplicar(this)">Restaurar</button></div>');
+    } catch (e) { aviso('No se ha podido leer el archivo: ' + (e.message || e), true); }
+  };
+  window.amCopiaAplicar = async function (btn) {
+    const c = cpPend, a = api(); if (!c || !a || !a.esAdmin()) return;
+    if (!confirm('¿Seguro que quieres restaurar la copia? Los datos actuales que estén en la copia se sustituirán.')) return;
+    const soloBodas = document.getElementById('am-cp-solo-bodas') && document.getElementById('am-cp-solo-bodas').checked;
+    btn.disabled = true;
+    let ok = 0, mal = 0;
+    const cols = soloBodas ? ['eventos'] : CP_COLECCIONES;
+    for (let i = 0; i < cols.length; i++) {
+      const l = c.colecciones[cols[i]] || [];
+      for (let j = 0; j < l.length; j++) {
+        const d = revivir(l[j]); const id = d.id; delete d.id; if (!id) continue;
+        btn.textContent = 'Restaurando ' + (ok + mal + 1) + '…';
+        try { await a.guardar(cols[i], id, d, true); ok++; } catch (e) { mal++; }
+      }
+    }
+    if (!soloBodas) Object.keys(c.config || {}).forEach(function (k) { if (CP_CONFIG.indexOf(k) >= 0) a.guardar('config', k, revivir(c.config[k]), true).catch(function () {}); });
+    cpPend = null; cerrarModal();
+    aviso(ok + ' datos restaurados' + (mal ? ', ' + mal + ' con error' : '') + '. Recarga la app para ver los cambios.', !!mal);
+  };
+  // Aviso semanal al administrador
+  function avisoCopia() {
+    const a = api(); if (!a || !a.esAdmin()) return;
+    a.leer('config', 'backup').then(function (b) {
+      const u = b ? aFecha(b.ultima) : null;
+      const d = u ? Math.floor((Date.now() - u.getTime()) / 86400000) : null;
+      if (d === null || d > 7) {
+        aviso(d === null ? 'Aún no hay ninguna copia de seguridad. Hazla en COPIA DE SEGURIDAD.' : 'Hace ' + d + ' días de la última copia de seguridad. Conviene hacer una nueva.');
+        const t = document.getElementById('tab-am-copias'); if (t) t.classList.add('am-aviso-copia');
+      }
+    }).catch(function () {});
+  }
+
   // ═════════ NUE-07 · Plano del cóctel ═════════
   const PC_TIPOS = [
     ['JAMÓN', '#8C3B4E', 120, 50], ['ANDALUZA', '#B5651D', 120, 50], ['QUESOS', '#C48A1E', 120, 50], ['BARRA', '#3F5A2E', 180, 45],
@@ -1946,6 +2047,7 @@
     if (a) {
       a.leer('config', 'reglas').then(function (r) { if (r) Object.keys(REGLAS_BASE).forEach(function (k) { if (r[k] !== undefined) REGLAS[k] = num(r[k]); }); }).catch(function () {});
       cargarDirectorio();
+      setTimeout(avisoCopia, 4000);
     }
   };
 })();

@@ -10,7 +10,7 @@ import {
 import {
   initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
   doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, collection, onSnapshot, writeBatch,
-  serverTimestamp, deleteField, FieldPath, query, where
+  serverTimestamp, deleteField, FieldPath, query, where, getDocsFromCache, Timestamp
 } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
 
 const app = initializeApp(window.FIREBASE_CONFIG);
@@ -151,9 +151,30 @@ function recordar(id, d) {
 // ───────── Funciones que antes estaban en Apps Script ─────────
 window.__backend = {
   loadData: async function () {
-    const qs = await getDocs(collection(db, 'eventos'));
+    // Lecturas optimizadas: la primera vez del día se leen todas las bodas; el resto de aperturas,
+    // las bodas guardadas en el dispositivo más solo las que han cambiado desde la última vez.
+    const col = collection(db, 'eventos');
+    const clave = 'am_sync_' + (S.user ? S.user.uid : '');
+    const hoy = new Date().toISOString().slice(0, 10);
+    const inicio = Date.now();
+    let previo = null;
+    try { previo = JSON.parse(localStorage.getItem(clave) || 'null'); } catch (e) { previo = null; }
+    let docs = null;
+    if (previo && previo.dia === hoy && previo.t) {
+      try {
+        const enCache = await getDocsFromCache(col);
+        if (enCache.size > 0 && enCache.size >= (previo.n || 0)) {
+          const cambios = await getDocs(query(col, where('modificado', '>', Timestamp.fromMillis(previo.t - 10 * 60 * 1000))));
+          const m = {};
+          enCache.forEach(function (x) { m[x.id] = x; });
+          cambios.forEach(function (x) { m[x.id] = x; });
+          docs = Object.keys(m).map(function (k) { return m[k]; });
+        }
+      } catch (e) { docs = null; }
+    }
+    if (!docs) { const qs = await getDocs(col); docs = []; qs.forEach(function (x) { docs.push(x); }); }
     const events = {}, revs = {};
-    qs.forEach(function (s) {
+    docs.forEach(function (s) {
       const d = s.data();
       if (d.papelera) return;
       const ev = montar(d);
@@ -162,6 +183,7 @@ window.__backend = {
       revs[s.id] = d.rev || '';
       recordar(s.id, d);
     });
+    try { localStorage.setItem(clave, JSON.stringify({ t: inicio, dia: hoy, n: docs.length })); } catch (e) {}
     return JSON.stringify({ events: events, revs: revs, corruptos: [] });
   },
   loadEvent: async function (id) {
@@ -209,7 +231,7 @@ window.__backend = {
   },
   deleteEventDB: async function (id) {
     if (!puedePlanificar()) return { ok: false, error: 'Tu rol no puede eliminar bodas.' };
-    await escribir(updateDoc(doc(db, 'eventos', id), { papelera: true, papeleraEn: serverTimestamp(), modificadoPor: S.user.uid, session: S.sesion }));
+    await escribir(updateDoc(doc(db, 'eventos', id), { papelera: true, papeleraEn: serverTimestamp(), modificado: serverTimestamp(), modificadoPor: S.user.uid, session: S.sesion }));
     delete guardado[id];
     return { ok: true };
   },
@@ -269,6 +291,7 @@ window.__am = {
   leer: async function (col, id) { const s = await getDoc(doc(db, col, id)); return s.exists() ? s.data() : null; },
   guardar: async function (col, id, datos, sustituir) {
     datos = Object.assign({}, datos, { actualizado: serverTimestamp() });
+    if (col === 'eventos') datos.modificado = serverTimestamp();
     await escribir(setDoc(doc(db, col, id), datos, sustituir ? {} : { merge: true }));
     return true;
   },
@@ -312,7 +335,8 @@ document.addEventListener('focusout', function () {
 });
 function escucharCambios() {
   let primera = true;
-  onSnapshot(collection(db, 'eventos'), function (qs) {
+  // Solo escucha las bodas que cambian desde ahora (no vuelve a leerlas todas)
+  onSnapshot(query(collection(db, 'eventos'), where('modificado', '>', Timestamp.fromMillis(Date.now() - 10 * 60 * 1000))), function (qs) {
     if (primera) { primera = false; return; }
     qs.docChanges().forEach(function (c) {
       if (c.doc.metadata.hasPendingWrites) return;
