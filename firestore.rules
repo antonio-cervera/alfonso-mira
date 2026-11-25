@@ -6,9 +6,9 @@ service cloud.firestore {
     function hasProfile() { return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)); }
     function rol() { return me().rol; }
     function isAdmin() { return hasProfile() && rol() == 'admin'; }
-    function isStaff() { return hasProfile() && rol() in ['admin','coordinador','jefesala','cocina','camarero']; }
-    function canPlan() { return hasProfile() && rol() in ['admin','coordinador']; }
-    function canEdit() { return hasProfile() && rol() in ['admin','coordinador','jefesala']; }
+    function isStaff() { return hasProfile() && rol() in ['admin','gestor','jefesala','coordinador','cocina','camarero']; }
+    function canPlan() { return hasProfile() && rol() in ['admin','gestor']; }
+    function canEdit() { return hasProfile() && rol() in ['admin','gestor','jefesala','coordinador']; }
 
     match /config/bootstrap {
       allow read: if signedIn();
@@ -32,7 +32,7 @@ service cloud.firestore {
       allow write: if canPlan();
     }
 
-    // Cronograma de logística semanal: lo marcan administración, coordinación y jefe de sala
+    // Cronograma de logística semanal: lo marcan administración, gestión, jefe de sala y coordinadores
     match /cronograma/{semana} {
       allow read: if isStaff();
       allow write: if canEdit();
@@ -65,7 +65,7 @@ service cloud.firestore {
     match /eventos/{id} {
       allow read: if isStaff();
       allow create: if canPlan() && request.resource.data.get('papelera', false) == false;
-      // Jefe de sala edita; solo administración y coordinación envían a la papelera
+      // Jefe de sala y coordinadores editan; solo administración y gestión envían a la papelera
       allow update: if canEdit()
         && (canPlan() || request.resource.data.get('papelera', false) == resource.data.get('papelera', false));
       allow delete: if isAdmin();

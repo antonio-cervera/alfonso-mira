@@ -420,3 +420,10 @@ main button.border-b-2.border-indigo-600:not(#am-x):not(#am-y):hover { backgroun
   body.print-informe #print-zone [style*="min-height"]:not(.am-mn) { min-height: 0 !important; }
   body.print-informe #print-zone [class*="min-h-["] { min-height: 0 !important; }
 }
+
+/* Roles sin gestión (jefe de sala, coordinador, cocina, camarero): consumos sin precios */
+body.rol-sinplan .am-tab-consumo th:nth-child(n+6):nth-child(-n+9),
+body.rol-sinplan .am-tab-consumo tbody td:nth-child(n+6):nth-child(-n+9),
+body.rol-sinplan .am-tab-consumo tfoot td:nth-child(n+3):not(:last-child),
+body.rol-sinplan .am-total-euros,
+body.rol-sinplan #subtab-consumos-control { display: none !important; }

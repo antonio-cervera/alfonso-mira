@@ -739,7 +739,7 @@
     }
     if (!e.finca_token) {
       root.innerHTML = h + '<div class="am-bloque"><h3>La finca rellena su ficha con un enlace</h3><p>La finca recibe un enlace, sin cuenta ni contraseña, y rellena horarios, potencia eléctrica, material, qué se puede dejar y cuándo recogerlo, normas y firma. La ficha queda guardada para las próximas bodas en <b>' + esc(e.ubicacion || 'esta finca') + '</b>.</p>' +
-        (puedePlan() ? '<button class="am-btn am-prin" onclick="amFincaCrear()">Crear enlace para la finca</button>' : '<p class="am-suave">Pide a coordinación que cree el enlace.</p>') + '</div>';
+        (puedePlan() ? '<button class="am-btn am-prin" onclick="amFincaCrear()">Crear enlace para la finca</button>' : '<p class="am-suave">Pide a gestión que cree el enlace.</p>') + '</div>';
       return;
     }
     root.innerHTML = h + '<div class="am-bloque"><p class="am-suave">Cargando ficha…</p></div>';
@@ -1521,6 +1521,21 @@
     };
   })();
 
+  // ═════════ Consumos sin precios para quien no es de gestión ═════════
+  // Coordinadores y jefe de sala rellenan los consumos, pero los costes, totales en € y el panel de control solo los ve gestión.
+  function marcarCostesConsumos() {
+    ['cocktail-table-body', 'comida-table-body', 'barra-bebidas-body', 'barra-otros-body'].forEach(function (id) {
+      const t = document.getElementById(id); if (t && t.closest('table')) t.closest('table').classList.add('am-tab-consumo');
+    });
+    document.querySelectorAll('#view-coordinadores-consumos .bg-gray-800.rounded-xl').forEach(function (b) { b.classList.add('am-total-euros'); });
+  }
+  marcarCostesConsumos();
+  (function () {
+    const orig = window.costesBannerHtml;
+    if (typeof orig !== 'function') return;
+    window.costesBannerHtml = function () { return puedePlan() ? orig.apply(this, arguments) : ''; };
+  })();
+
   // ═════════ NUE-07 · Plano del cóctel ═════════
   const PC_TIPOS = [
     ['JAMÓN', '#8C3B4E', 120, 50], ['ANDALUZA', '#B5651D', 120, 50], ['QUESOS', '#C48A1E', 120, 50], ['BARRA', '#3F5A2E', 180, 45],
@@ -1726,7 +1741,7 @@
   let filtroDir = '';
   async function renderDirectorio() {
     const root = document.getElementById('am-root-am-personal');
-    if (!puedePlan()) { root.innerHTML = cabecera('PERSONAL', '', false) + '<div class="am-bloque">Solo administración y coordinación.</div>'; return; }
+    if (!puedePlan()) { root.innerHTML = cabecera('PERSONAL', '', false) + '<div class="am-bloque">Solo administración y gestión.</div>'; return; }
     await cargarDirectorio();
     const f = normNombre(filtroDir);
     const lista = DIR.filter(function (p) { return !f || normNombre(p.nombre + ' ' + (p.alias || []).join(' ') + ' ' + (p.equipo || '')).indexOf(f) >= 0; })

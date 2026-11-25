@@ -24,11 +24,11 @@ try {
 }
 
 const ROLES = {
-  admin: 'Administrador', coordinador: 'Coordinador', jefesala: 'Jefe de sala',
+  admin: 'Administrador', gestor: 'Gestor', jefesala: 'Jefe de sala', coordinador: 'Coordinador',
   cocina: 'Cocina', camarero: 'Camarero', pendiente: 'Pendiente'
 };
-const ROLES_PLAN = ['admin', 'coordinador'];          // crean bodas, costes y puntos de mejora
-const ROLES_EDITAN = ['admin', 'coordinador', 'jefesala']; // editan el contenido de las bodas
+const ROLES_PLAN = ['admin', 'gestor'];          // gestión: crean bodas, costes, puntos de mejora y personal
+const ROLES_EDITAN = ['admin', 'gestor', 'jefesala', 'coordinador']; // rellenan los documentos de las bodas
 const LIMITE_DOC = 950000;
 
 const S = { user: null, perfil: null, arrancado: false, enNube: 0, online: navigator.onLine, sesion: 'web' };
@@ -45,6 +45,23 @@ function mayus(v) { return String(v || '').trim().toUpperCase(); }
 function rol() { return S.perfil ? S.perfil.rol : ''; }
 function puedePlanificar() { return ROLES_PLAN.indexOf(rol()) >= 0; }
 function puedeEditar() { return ROLES_EDITAN.indexOf(rol()) >= 0; }
+// Coordinadores, camareros y cocina solo ven las bodas en las que aparecen en el LISTADO DE PERSONAL
+const ROLES_SOLO_SUYAS = ['coordinador', 'camarero', 'cocina'];
+function palabras(t) {
+  return String(t || '').normalize('NFD').split('').filter(function (c) { const k = c.charCodeAt(0); return k < 0x300 || k > 0x36f; }).join('')
+    .toUpperCase().split(' ').map(function (x) { return x.split('.').join('').trim(); }).filter(function (x) { return x; });
+}
+function esSuya(ev) {
+  if (ROLES_SOLO_SUYAS.indexOf(rol()) < 0) return true;
+  const yo = palabras(S.perfil && S.perfil.nombre);
+  if (!yo.length) return false;
+  return (ev && ev.camareros || []).some(function (c) {
+    const p = palabras(c && c.nombre);
+    if (!p.length) return false;
+    if (p.join(' ') === yo.join(' ')) return true;
+    return p.length >= 2 && p.every(function (x) { return yo.indexOf(x) >= 0; });
+  });
+}
 function esAdmin() { return rol() === 'admin'; }
 function nuevaRev() { return Date.now().toString(36) + Math.floor(Math.random() * 1679616).toString(36); }
 function espera(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
@@ -139,7 +156,9 @@ window.__backend = {
     qs.forEach(function (s) {
       const d = s.data();
       if (d.papelera) return;
-      events[s.id] = montar(d);
+      const ev = montar(d);
+      if (!esSuya(ev)) return;
+      events[s.id] = ev;
       revs[s.id] = d.rev || '';
       recordar(s.id, d);
     });
@@ -194,7 +213,7 @@ window.__backend = {
     delete guardado[id];
     return { ok: true };
   },
-  // COSTES y PUNTOS DE MEJORA: ahora los abre el rol (administrador o coordinador), sin contraseña
+  // COSTES y PUNTOS DE MEJORA: ahora los abre el rol (administrador o gestor), sin contraseña
   verificarClaveCostes: async function () { return puedePlanificar(); },
   loadCostes: async function () {
     const s = await getDoc(doc(db, 'config', 'costes'));
@@ -299,6 +318,7 @@ function escucharCambios() {
       if (c.doc.metadata.hasPendingWrites) return;
       const d = c.doc.data();
       if (d.session && d.session === S.sesion) return;
+      if (!esSuya(montar(d))) return;
       aplicarRemoto(c.doc.id);
     });
   }, function (e) { console.warn('Tiempo real', e); });
@@ -390,7 +410,7 @@ function aplicarRol() {
     window.visionPasarEdicion = function () { aviso('Tu rol solo permite consultar.'); };
   }
   if (!puedePlanificar()) {
-    window.openModalNuevoRegistro = function () { aviso('Solo administración y coordinación pueden crear bodas.'); };
+    window.openModalNuevoRegistro = function () { aviso('Solo administración y gestión pueden crear bodas.'); };
   } else {
     try { costesClave = 'rol'; } catch (e) {}
     // Sin pantalla de contraseña: las propuestas se cargan al entrar en PUNTOS DE MEJORA
@@ -432,8 +452,9 @@ function abrirUsuarios() {
     '<div id="nb-imp-msg" class="nb-suave"></div>' +
     '<div id="nb-usuarios" class="nb-tabla">Cargando…</div>' +
     '<table class="nb-leyenda"><tr><td><b>Administrador</b></td><td>Todo, incluidos usuarios, costes y eliminar bodas.</td></tr>' +
-    '<tr><td><b>Coordinador</b></td><td>Crea y edita bodas, costes y puntos de mejora.</td></tr>' +
+    '<tr><td><b>Gestor</b></td><td>Gestión: crea y edita bodas, costes, puntos de mejora, personal y planning.</td></tr>' +
     '<tr><td><b>Jefe de sala</b></td><td>Edita las bodas existentes (checklists, evaluaciones…).</td></tr>' +
+    '<tr><td><b>Coordinador</b></td><td>Camarero con rango de coordinación: rellena su ficha y los documentos de la boda. Sin costes ni gestión.</td></tr>' +
     '<tr><td><b>Cocina / Camarero</b></td><td>Solo consulta (modo visión).</td></tr></table>';
   $('nb-nuevo').addEventListener('click', formNuevoUsuario);
   $('nb-importar').addEventListener('click', function () { $('nb-fichero').click(); });
