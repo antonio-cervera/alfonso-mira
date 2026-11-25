@@ -386,6 +386,12 @@ document.addEventListener('click', function (e) {
 onAuthStateChanged(auth, function (user) {
   S.user = user;
   if (!user) { pantalla('nb-login'); return; }
+  // La sesión dura 180 días desde la última vez que se escribió la contraseña (o se entró con Google)
+  const ultima = Date.parse((user.metadata && user.metadata.lastSignInTime) || '');
+  if (ultima && Date.now() - ultima > 180 * 864e5) {
+    signOut(auth).then(function () { pantalla('nb-login'); aviso('Por seguridad, vuelve a entrar con tu correo y contraseña (la sesión dura 180 días).'); });
+    return;
+  }
   pantalla('nb-carga');
   prepararPerfil(user).catch(function (e) { aviso('No se ha podido cargar tu perfil: ' + traducirError(e), true); pantalla('nb-login'); });
 });
