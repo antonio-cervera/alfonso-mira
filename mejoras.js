@@ -162,9 +162,21 @@
     ['nbl_coct_tipo', 'coc_tipo'], ['nbl_coct_ubi', 'coc_ubicacion'], ['nbl_coct_hora', 'coc_hora_cita'], ['nbl_coct_contacto', 'coc_contacto'],
     ['nbl_coct_necesidades', 'coc_necesidades'], ['nbl_coct_zona', 'coc_zona']
   ];
+  // Más enlaces de la Hoja de Equipos del Excel (celdas azules = vienen de Protocolo)
+  MAPA.push(
+    ['contacto', 'finca_contacto'], ['telefono', 'finca_tlfno'], ['evento', 'tipo_evento'], ['ubicacion', 'sitio'],
+    ['ig_jlv_acceso_inv', 'acc_invitados_jlv'], ['ig_cat_acceso_inv', 'acc_invitados_cat'], ['ig_jlv_acceso_sala', 'acc_sala_jlv'], ['ig_cat_acceso_sala', 'acc_sala_cat'],
+    ['ig_jlv_entrada_cont', 'recepcion_jlv'], ['ig_cat_acceso_cont', 'recepcion_cat'], ['ig_jlv_entrada_cont_sala', 'acc_sala_contr_jlv'], ['ig_cat_acceso_cont_sala', 'acc_sala_contr_cat'],
+    ['ig_mesa_tarta', 'pedir_tarta'], ['ig_cc_otros', function (p) { return p_(p, coctelMismo(p) ? 'beb_comida_otro' : 'beb_coctel_otro'); }],
+    ['nsa_obs_bebidas', 'beb_comida_otro'], ['nsa_copas_mesa', 'bl_copas_mesa'], ['nsa_presi_ubi_jlv', 'ubi_presi_jlv'], ['nsa_presi_ubi_cat', 'ubi_presi_cat'],
+    ['ncc_tipo_mesas', 'mob_tipo_mesa'], ['ncc_aguas', 'mob_aguas'], ['ncc_aguas_tipo', 'mob_aguas_uso'], ['ncc_foodtruck', 'mob_foodtruck'], ['ncc_foodtruck_uso', 'mob_foodtruck_uso'],
+    ['ncc_sonido', 'av_sonido_coctel'], ['ncc_sonido_nec', 'av_necesidades'], ['nof_carro', 'det_camarera'], ['nof_mesa_tarta', 'pedir_tarta']
+  );
   ['ncc_', 'nco_'].forEach(function (pre) {
-    MAPA.push([pre + 'jamon_tipo', 'jamon_tipo'], [pre + 'jamon_unidades', 'jamon_unidades'], [pre + 'jamon_puntos', 'jamon_puntos'],
-      [pre + 'jamon_resopo', 'jamon_resopo'], [pre + 'jamon_resopo_cant', 'jamon_resopo_cant']);
+    MAPA.push([pre + 'jamon_desc', 'jamon_tipo'], [pre + 'jamon_tipo', 'jamon_servicio'], [pre + 'jamon_unidades', 'jamon_unidades'], [pre + 'jamon_puntos', 'jamon_puntos'],
+      [pre + 'jamon_resopo', 'jamon_resopo'], [pre + 'jamon_resopo_cant', 'jamon_resopo_cant'],
+      [pre + 'quesos_desc', 'quesos_tipo'], [pre + 'quesos_tipo', 'quesos_servicio'], [pre + 'quesos_asistidos', 'quesos_asistidos'], [pre + 'quesos_resopo', 'quesos_resopo']);
+    for (let i = 1; i <= 5; i++) MAPA.push([pre + 'sc' + i + '_nombre', 'sc_' + (i - 1) + '_pincho'], [pre + 'sc' + i + '_puntos', 'sc_' + (i - 1) + '_puntos']);
   });
   // Ceremonia (NUE-04) → Equipos
   const MAPA_CER = [['ig_ceremonia', 'hay'], ['ig_hora_ceremonia', 'hora'], ['ig_recepcion_ceremonia', 'recepcion'], ['ig_recepcion_bebida', 'bebida'],
@@ -177,8 +189,9 @@
     if (!e) return [];
     const m = ensureJefeSalaManual(e);
     if (!m._auto || typeof m._auto !== 'object') m._auto = {};
-    const p = e.protocolo || {};
     const cambios = [];
+    if (limpiarFormatos(e)) cambios.push('_formatos');
+    const p = e.protocolo || {};
     function poner(clave, valor) {
       const v = txt(valor);
       const gestionado = m._auto[clave] !== undefined && txt(m[clave]) === txt(m._auto[clave]);
@@ -522,6 +535,38 @@
     return cambio;
   }
   envolver('renderCanvas', function () { if (sincronizarEspeciales()) guardarEv(); }, null);
+
+
+  // ═════════ Pedido material y Material: cabeceras que se rellenan solas ═════════
+  function autoCampos(obj, mapa) {
+    if (!obj._auto || typeof obj._auto !== 'object') obj._auto = {};
+    let cambio = false;
+    Object.keys(mapa).forEach(function (k) {
+      const v = txt(mapa[k]);
+      const gest = obj._auto[k] !== undefined && txt(obj[k]) === txt(obj._auto[k]);
+      if (v === '') { if (gest) { obj[k] = ''; delete obj._auto[k]; cambio = true; } return; }
+      if (txt(obj[k]) === '' || gest) { if (txt(obj[k]) !== v || obj._auto[k] !== v) { obj[k] = v; obj._auto[k] = v; cambio = true; } }
+    });
+    return cambio;
+  }
+  function personaDe(e, resp) { try { return jswNames(e, resp); } catch (err) { return ''; } }
+  envolver('renderPedidoMaterial', function (root, e) {
+    e = e || evActual(); if (!e) return;
+    const d = getPedidoData(e); if (!d.fields) d.fields = {};
+    const p = e.protocolo || {};
+    const fic = e.finca_token && fincasCache[e.finca_token] ? (fincasCache[e.finca_token].ficha || {}) : {};
+    if (e.finca_token && !fincasCache[e.finca_token]) leerFinca(e.finca_token).then(function (x) { if (x && x.ficha) { try { renderSimpleDocument('pedido', 'pedido'); } catch (err) {} } });
+    if (autoCampos(d.fields, {
+      fechaEntrega: fic.montaje_fecha || '', fechaRecogida: fic.recogida_fecha || '',
+      responsableServicio: personaDe(e, 'JEFE/A SALA'),
+      coordinador: personaDe(e, 'COORDINADOR/A') || p_(p, 'coordinador'),
+      telefonoFinca: limpiarTel(p_(p, 'finca_tlfno') || fic.telefono || '')
+    })) guardarEv();
+  }, null);
+  envolver('renderMaterialesView', function () {
+    const e = evActual(); if (!e || !e.materiales) return;
+    if (autoCampos(e.materiales, { coordinador: personaDe(e, 'COORDINADOR/A') || p_(e.protocolo || {}, 'coordinador') })) guardarEv();
+  }, null);
 
   // ═════════ NUE-04 · Ceremonia ═════════
   function cer() { const e = evActual(); if (!e.ceremonia || typeof e.ceremonia !== 'object') e.ceremonia = {}; return e.ceremonia; }
