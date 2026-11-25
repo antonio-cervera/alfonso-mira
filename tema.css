@@ -460,3 +460,8 @@ body.rol-admin .am-solo-equipo, body.rol-gestor .am-solo-equipo { display: none 
   body > main{padding-top:56px;width:100vw}
 }
 @media print{.am-barra-movil,.am-velo{display:none!important}}
+
+/* Plano en móvil: el lienzo de 900 px se desplaza dentro de su zona sin descolocar la página */
+@media (max-width: 900px) {
+  #plano-editor-area { max-width: 100%; overflow-x: auto; align-items: flex-start !important; -webkit-overflow-scrolling: touch; }
+}

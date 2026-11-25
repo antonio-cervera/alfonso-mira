@@ -530,14 +530,6 @@
                 </div>
             </div>
         </nav>
-        <div id="sidebar-tools" class="h-64 border-t border-gray-200 overflow-y-auto p-4 hidden custom-scrollbar bg-gray-50 flex-shrink-0">
-            <h2 class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3"><i class="fa-solid fa-toolbox mr-2"></i>Herramientas Plano</h2>
-            <div class="grid grid-cols-2 gap-2 mb-4">
-                <div class="sidebar-tool bg-white border border-gray-200 rounded p-2 flex flex-col items-center gap-1 shadow-sm" draggable="true" ondragstart="dragStart(event, 'estructura')"><div class="w-8 h-6 bg-gray-200 border-2 border-gray-400 rounded"></div><span class="text-[9px] font-bold text-gray-600 text-center leading-tight">Estructura</span></div>
-                <div class="sidebar-tool bg-white border border-gray-200 rounded p-2 flex flex-col items-center justify-center gap-1 shadow-sm" draggable="true" ondragstart="dragStart(event, 'texto')"><div class="text-gray-400 text-lg"><i class="fa-solid fa-font"></i></div><span class="text-[9px] font-bold text-gray-600">Texto</span></div>
-            </div>
-            <div class="p-2 bg-red-50 border border-red-100 rounded flex flex-col items-center text-red-400 text-center" ondragover="allowDrop(event)" ondrop="deleteItemDrop(event)"><i class="fa-solid fa-trash-can text-lg mb-1"></i><span class="text-[8px] font-bold uppercase tracking-wider">Arrastra aquí para eliminar</span></div>
-        </div>
         <div class="p-3 border-t bg-white flex-shrink-0">
             <div id="loader" class="hidden flex items-center justify-center text-xs text-indigo-600 font-bold animate-pulse"><i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Sincronizando BD...</div>
             <div id="loader-ok" class="flex items-center justify-center text-xs text-green-600 font-bold"><i class="fa-solid fa-cloud-check mr-2"></i> Base de datos al día</div>
@@ -835,6 +827,12 @@
                         <select id="plano-num-dir" onchange="planoSetNumeracion(this.value)" class="border border-gray-300 rounded p-1.5 text-xs font-bold text-gray-700 normal-case tracking-normal"><option value="izq">De izquierda a derecha</option><option value="dcha">De derecha a izquierda</option></select>
                     </label>
                     <button onclick="planoRegenerar()" class="px-3 py-2 bg-indigo-600 text-white rounded-md text-xs font-bold hover:bg-indigo-700 transition whitespace-nowrap"><i class="fa-solid fa-rotate mr-1"></i> Regenerar desde Protocolo</button>
+                </div>
+                <div id="sidebar-tools" class="hidden w-[900px] mb-3 bg-white border border-gray-300 rounded-lg px-3 py-2 shadow-sm flex flex-wrap items-center gap-2 text-xs">
+                    <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest mr-1"><i class="fa-solid fa-toolbox mr-1"></i>Añadir</span>
+                    <button type="button" class="sidebar-tool px-3 py-1.5 bg-white border border-gray-300 rounded font-bold text-gray-700" draggable="true" ondragstart="dragStart(event, 'estructura')" onclick="planoAnadir('estructura')" title="Pulsa o arrastra al plano"><i class="fa-regular fa-square mr-1"></i>Estructura</button>
+                    <button type="button" class="sidebar-tool px-3 py-1.5 bg-white border border-gray-300 rounded font-bold text-gray-700" draggable="true" ondragstart="dragStart(event, 'texto')" onclick="planoAnadir('texto')" title="Pulsa o arrastra al plano"><i class="fa-solid fa-font mr-1"></i>Texto</button>
+                    <button type="button" class="ml-auto px-3 py-1.5 bg-red-50 border border-red-200 rounded font-bold text-red-600" ondragover="allowDrop(event)" ondrop="deleteItemDrop(event)" onclick="deleteItemDrop({preventDefault:function(){}})" title="Selecciona un elemento y pulsa, o arrástralo aquí"><i class="fa-solid fa-trash-can mr-1"></i>Eliminar seleccionado</button>
                 </div>
                 <div id="canvas-plano" class="w-[900px] h-[600px] rounded-xl relative plan-grid overflow-hidden bg-white shadow-xl flex-shrink-0 border border-gray-300" ondragover="allowDrop(event)" ondrop="dropOnCanvas(event)">
                     <div class="absolute top-4 left-4 bg-white/90 px-4 py-2 rounded shadow text-sm font-black text-gray-700 z-0 border">SALA / CARPA</div>
@@ -2118,6 +2116,7 @@
         function dragStart(e, type) { if(currentPlanoMode === 'camareros') return; e.dataTransfer.setData('source', 'sidebar'); e.dataTransfer.setData('type', type); const rect = e.target.getBoundingClientRect(); dragOffset.x = e.clientX - rect.left; dragOffset.y = e.clientY - rect.top; }
         function allowDrop(e) { if(currentPlanoMode === 'camareros') return; e.preventDefault(); }
         
+        function planoAnadir(type) { if (!currentEventId || currentPlanoMode === 'camareros') return; const dim = type === 'estructura' ? {w: 120, h: 100} : {w: 150, h: 50}; appData.events[currentEventId].items.push({ id: 'itm_' + Date.now(), entity: type, type: type, x: 20, y: 20, rotation: 0, w: dim.w, h: dim.h, texto: type === 'texto' ? 'Doble clic para editar' : '' }); scheduleSave(); renderCanvas(); }
         function dropOnCanvas(e) { 
             if(currentPlanoMode === 'camareros') return;
             e.preventDefault(); const source = e.dataTransfer.getData('source'); if (source !== 'sidebar') return; const type = e.dataTransfer.getData('type'); const rect = document.getElementById('canvas-plano').getBoundingClientRect(); let x = Math.max(0, Math.min(e.clientX - rect.left - dragOffset.x, rect.width - 50)); let y = Math.max(0, Math.min(e.clientY - rect.top - dragOffset.y, rect.height - 50)); clearSelection(); 
