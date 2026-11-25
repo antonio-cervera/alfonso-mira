@@ -1,5 +1,5 @@
 // Alfonso Mira · Planning — modo sin conexión (generado por construir.py)
-const VERSION = 'am-1795601702';
+const VERSION = 'am-1795603294';
 const PROPIOS = ['./', 'index.html', 'tema.css', 'tema-colores.css', 'puente.js', 'nube.js', 'mejoras.js', 'ficha_campos.js', 'firebase-config.js',
   'favicon.ico', 'site.webmanifest', 'img/logo-am.png', 'img/logo-am-marfil.png', 'img/favicon-16.png', 'img/favicon-32.png', 'img/apple-touch-icon.png', 'img/icon-192.png', 'img/icon-512.png'];
 const EXTERNOS_CORS = ['https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js', 'https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js', 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js'];
