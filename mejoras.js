@@ -1992,7 +1992,7 @@
       const hi = historialDe(p);
       h += '<tr><td><b>' + esc(p.nombre) + '</b>' + (p.uid ? ' <span class="am-chip-usuario" title="' + esc(p.email || '') + '"><i class="fa-solid fa-user-check"></i> usuario</span>' : '') + '</td><td>' + esc(p.telefono || '') + '</td><td>' + esc(p.equipo || '') + '</td><td class="am-suave">' + esc((p.alias || []).join(', ')) + '</td>' +
         '<td class="am-c"><button class="am-enlace-btn" onclick="amHistorial(\'' + p.id + '\')">' + hi.length + '</button></td><td>' + (hi[0] ? esc(fechaCorta(hi[0].fecha)) : '—') + '</td>' +
-        '<td class="am-acc"><button class="am-btn" onclick="amPersona(\'' + p.id + '\')">Editar</button><button class="am-btn" onclick="amFusionar(\'' + p.id + '\')">Unir con…</button></td></tr>';
+        '<td class="am-acc"><button class="am-btn" onclick="amPersona(\'' + p.id + '\')">Editar</button><button class="am-btn" onclick="amFusionar(\'' + p.id + '\')" title="Solo si es la misma persona escrita de dos formas (p. ej. JUAN T y J. TARRAGA)">Es duplicado de…</button></td></tr>';
     });
     root.innerHTML = h + '</tbody></table></div>';
   }
@@ -2018,10 +2018,10 @@
   window.amPersonaBorrar = async function (id) { if (!confirm('¿Eliminar esta persona del directorio? Las bodas no cambian.')) return; await api().borrar('personal', id); cerrarModal(); renderDirectorio(); };
   window.amFusionar = function (id) {
     const p = DIR.filter(function (x) { return x.id === id; })[0];
-    modal('<div class="am-modal-cab"><h2>Unir ' + esc(p.nombre) + ' con…</h2><button class="am-x" data-am-cerrar>✕</button></div>' +
-      '<p class="am-suave">Elige el nombre correcto. ' + esc(p.nombre) + ' pasará a ser una forma alternativa de escribirlo y las bodas se actualizarán.</p>' +
+    modal('<div class="am-modal-cab"><h2>' + esc(p.nombre) + ' está repetido</h2><button class="am-x" data-am-cerrar>✕</button></div>' +
+      '<p class="am-suave">Úsalo solo cuando la misma persona aparece dos veces en el directorio con distinto nombre (por ejemplo «JUAN T» y «J. TARRAGA»). No tiene nada que ver con los equipos de cada boda. Elige el nombre correcto: ' + esc(p.nombre) + ' quedará como otra forma de escribirlo, se borrará la ficha repetida y las bodas pasadas se corregirán.</p>' +
       '<label class="am-campo">Nombre correcto<select id="am-f-dest">' + DIR.filter(function (x) { return x.id !== id; }).sort(function (a, b) { return String(a.nombre).localeCompare(String(b.nombre)); }).map(function (x) { return '<option value="' + x.id + '">' + esc(x.nombre) + '</option>'; }).join('') + '</select></label>' +
-      '<div class="am-fila am-fin"><button class="am-btn" data-am-cerrar>Cancelar</button><button class="am-btn am-prin" onclick="amFusionarOk(\'' + id + '\')">Unir</button></div>');
+      '<div class="am-fila am-fin"><button class="am-btn" data-am-cerrar>Cancelar</button><button class="am-btn am-prin" onclick="amFusionarOk(\'' + id + '\')">Quitar duplicado</button></div>');
   };
   window.amFusionarOk = async function (id) {
     const o = DIR.filter(function (x) { return x.id === id; })[0];
@@ -2053,7 +2053,7 @@
     Object.keys(appData.events).forEach(function (id) { (appData.events[id].camareros || []).forEach(function (c) { const n = limpiaNombre(c.nombre); if (n && !buscarPersona(n)) vistos[n] = vistos[n] || c.equipo || ''; }); });
     const nombres = Object.keys(vistos).sort();
     if (!nombres.length) { aviso('Todos los nombres de las bodas ya están en el directorio.'); return; }
-    modal('<div class="am-modal-cab"><h2>Importar nombres</h2><button class="am-x" data-am-cerrar>✕</button></div><p class="am-suave">Marca los que quieres añadir. Si dos nombres son la misma persona, añade solo uno y luego usa «Unir con…».</p>' +
+    modal('<div class="am-modal-cab"><h2>Importar nombres</h2><button class="am-x" data-am-cerrar>✕</button></div><p class="am-suave">Marca los que quieres añadir. Si dos nombres son la misma persona, añade solo uno y luego usa «Es duplicado de…».</p>' +
       '<div class="am-lista-imp">' + nombres.map(function (n, i) { return '<label><input type="checkbox" checked data-imp="' + i + '"> ' + esc(n) + ' <span class="am-suave">' + esc(vistos[n]) + '</span></label>'; }).join('') + '</div>' +
       '<div class="am-fila am-fin"><button class="am-btn" data-am-cerrar>Cancelar</button><button class="am-btn am-prin" id="am-imp-ok">Añadir</button></div>');
     document.getElementById('am-imp-ok').onclick = async function () {
