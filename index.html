@@ -458,12 +458,12 @@
         @media print { body * { visibility:hidden !important; } #seating-a4-sheet,#seating-a4-sheet * { visibility:visible !important; } #seating-a4-sheet { position:absolute;left:0;top:0;width:210mm;min-height:297mm;box-shadow:none;border:none; } }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="tema-colores.css?v=1795598702">
-    <link rel="stylesheet" href="tema.css?v=1795598702">
+    <link rel="stylesheet" href="tema-colores.css?v=1795598754">
+    <link rel="stylesheet" href="tema.css?v=1795598754">
 </head>
 <body class="h-screen w-screen flex flex-row">
-    <script src="firebase-config.js?v=1795598702"></script>
-    <script src="puente.js?v=1795598702"></script>
+    <script src="firebase-config.js?v=1795598754"></script>
+    <script src="puente.js?v=1795598754"></script>
 
     <!-- DATALISTS PARA MATERIALES -->
     <datalist id="dl-manteleria-art"><option value="MANTELES CASA"></option><option value="MANTELES ALQUILER"></option><option value="CUBREMANTEL CASA"></option><option value="CUBREMANTEL ALQUILER"></option><option value="SERVILLETAS CASA"></option><option value="SERVILLETAS ALQUILER"></option><option value="LITOS"></option></datalist>
@@ -472,20 +472,7 @@
     <datalist id="dl-cuberteria-tipo"><option value="CASA"></option><option value="ALQUILER MENADIS"></option><option value="ALQUILER P&T"></option></datalist>
 
     <aside class="w-72 bg-white shadow-2xl flex flex-col z-20 flex-shrink-0 border-r border-gray-200">
-        <div class="px-4 py-5 border-b border-slate-200 bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 flex items-center gap-3 relative overflow-hidden">
-            <div class="absolute -right-5 -top-7 w-24 h-24 rounded-full border border-white/10"></div>
-            <div class="absolute -right-1 -bottom-10 w-20 h-20 rounded-full border border-amber-300/20"></div>
-            <div class="relative w-12 h-12 rounded-xl bg-white/10 border border-amber-300/50 flex items-center justify-center shadow-lg shrink-0">
-                <i class="fa-solid fa-champagne-glasses text-2xl text-amber-300"></i>
-                <span class="absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full bg-amber-300 border-2 border-slate-900"></span>
-            </div>
-            <div class="relative min-w-0">
-                <h1 class="text-[17px] font-black text-white leading-tight tracking-wide">ALFONSO MIRA</h1>
-                <p class="text-[9px] text-amber-300 font-extrabold tracking-[0.22em] uppercase mt-1">Eventos & Celebraciones</p>
-                <p class="text-[9px] text-slate-300 tracking-wider mt-0.5">PLANNING PROFESIONAL</p>
-            </div>
-            <img src="img/logo-am-marfil.png" alt="Alfonso Mira" class="am-logo-lateral">
-        </div>
+        <div class="am-cab-lateral"><img src="img/logo-am-marfil.png" alt="Alfonso Mira" class="am-logo-lateral"></div>
         <nav class="flex flex-col p-3 space-y-2 flex-1 overflow-y-auto custom-scrollbar">
             <button onclick="switchTab('calendar')" id="tab-calendar" class="nav-btn nav-active"><i class="fa-solid fa-calendar-days w-6 text-center mr-2"></i> CALENDARIO</button>
             <button onclick="switchTab('historico')" id="tab-historico" class="nav-btn"><i class="fa-solid fa-clock-rotate-left w-6 text-center mr-2"></i> HISTÓRICO</button>
@@ -7040,8 +7027,8 @@
             pzImprimirBloques(bloques);
         }
     </script>
-    <script src="ficha_campos.js?v=1795598702"></script>
-    <script src="mejoras.js?v=1795598702"></script>
+    <script src="ficha_campos.js?v=1795598754"></script>
+    <script src="mejoras.js?v=1795598754"></script>
     <!-- Acceso (Firebase) -->
     <div id="nb-capa" class="nb-capa">
         <div id="nb-carga" class="nb-tarjeta">
@@ -7069,7 +7056,7 @@
     </div>
     <div id="nb-modal" class="nb-modal nb-oculto"><div id="nb-modal-caja" class="nb-modal-caja"></div></div>
 
-    <script type="module" src="nube.js?v=1795598702"></script>
+    <script type="module" src="nube.js?v=1795598754"></script>
     <script>if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function (e) { console.warn('Sin modo offline', e); }); }); }</script>
 </body>
 </html>

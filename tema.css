@@ -427,3 +427,7 @@ body.rol-sinplan .am-tab-consumo tbody td:nth-child(n+6):nth-child(-n+9),
 body.rol-sinplan .am-tab-consumo tfoot td:nth-child(n+3):not(:last-child),
 body.rol-sinplan .am-total-euros,
 body.rol-sinplan #subtab-consumos-control { display: none !important; }
+
+/* Cabecera del menú: solo el logo */
+.am-cab-lateral { padding: 18px 22px 16px; border-bottom: 1px solid rgba(255,255,255,.08); display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
+.am-cab-lateral .am-logo-lateral { width: 100%; max-width: 190px; margin: 0; flex-basis: auto; }
