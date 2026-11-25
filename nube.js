@@ -512,7 +512,7 @@ function abrirUsuarios() {
     '<div id="nb-usuarios" class="nb-tabla">Cargando…</div>' +
     '<table class="nb-leyenda"><tr><td><b>Administrador</b></td><td>Todo, incluidos usuarios, costes y eliminar bodas.</td></tr>' +
     '<tr><td><b>Gestor</b></td><td>Gestión: crea y edita bodas, costes, puntos de mejora, personal y planning.</td></tr>' +
-    '<tr><td><b>Jefe de sala</b></td><td>Edita las bodas existentes (checklists, evaluaciones…).</td></tr>' +
+    '<tr><td><b>Jefe de sala</b></td><td>Edita todas las bodas (checklists, evaluaciones…), con listado de personal y precios de consumos. No ve COSTES.</td></tr>' +
     '<tr><td><b>Coordinador</b></td><td>Camarero con rango de coordinación: rellena su ficha y los documentos de la boda. Sin costes ni gestión.</td></tr>' +
     '<tr><td><b>Cocina / Camarero</b></td><td>Solo consulta (modo visión).</td></tr></table>';
   $('nb-nuevo').addEventListener('click', formNuevoUsuario);

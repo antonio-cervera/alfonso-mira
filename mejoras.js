@@ -2109,7 +2109,20 @@
   })();
 
   // ═════════ Arranque (lo llama nube.js tras iniciar sesión) ═════════
+  // Móvil: menú lateral desplegable con barra superior
+  function barraMovil() {
+    if (document.getElementById('am-barra-movil')) return;
+    document.body.insertAdjacentHTML('afterbegin', '<div id="am-barra-movil" class="am-barra-movil"><button class="am-hamb" onclick="amMenuMovil()" aria-label="Menú"><i class="fa-solid fa-bars"></i></button><img src="img/logo-am-marfil.png" alt="Alfonso Mira"><span id="am-barra-titulo"></span></div><div class="am-velo" onclick="amMenuMovil(false)"></div>');
+    const aside = document.querySelector('body > aside');
+    if (aside) aside.addEventListener('click', function (e) {
+      const b = e.target.closest('button'); if (!b) return;
+      if ((b.getAttribute('onclick') || '').indexOf('toggleMenu') >= 0) return;
+      setTimeout(function () { amMenuMovil(false); }, 60);
+    });
+  }
+  window.amMenuMovil = function (v) { document.body.classList.toggle('am-menu-abierto', v === undefined ? !document.body.classList.contains('am-menu-abierto') : !!v); };
   window.__mejorasArranque = function () {
+    barraMovil();
     crearMenu();
     const a = api();
     if (a) {
