@@ -1386,6 +1386,141 @@
   window.amFondoOp = function (v) { const e = evActual(); e.plano_fondo_op = Math.max(0.1, Math.min(1, num(v) / 100)); const c = document.querySelector('#canvas-plano .am-plano-fondo'); if (c) c.style.opacity = String(e.plano_fondo_op); guardarEv(); };
   window.amFondoQuitar = function () { const e = evActual(); delete e.plano_fondo; delete e.plano_fondo_op; guardarEv(); pintarFondoPlano(); };
 
+  // ═════════ Costes: subir un Excel con los precios y descargar la lista ═════════
+  function sheetJS() {
+    return new Promise(function (ok, ko) {
+      if (window.XLSX) { ok(window.XLSX); return; }
+      const s = document.createElement('script'); s.src = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
+      s.onload = function () { ok(window.XLSX); }; s.onerror = function () { ko(new Error('No se ha podido cargar el lector de Excel (¿sin conexión?).')); };
+      document.head.appendChild(s);
+    });
+  }
+  function numES(v) {
+    if (typeof v === 'number') return v;
+    let t = txt(v).split('€').join('').split(' ').join('');
+    if (t.indexOf(',') >= 0 && t.indexOf('.') >= 0) t = t.split('.').join('');
+    t = t.split(',').join('.');
+    const n = parseFloat(t); return isNaN(n) ? null : n;
+  }
+  // Reconoce las columnas por su título, estén en el orden que estén
+  const COL_COSTES = [['cat', ['CATEGORIA', 'DESCRIPCION', 'SECTOR', 'FAMILIA', 'GRUPO']], ['tipo', ['TIPO', 'ARTICULO', 'PRODUCTO', 'MARCA', 'REFERENCIA', 'NOMBRE']],
+    ['coste', ['COSTE', 'PRECIO', 'IMPORTE', 'PVP', 'TARIFA']], ['iva', ['IVA']], ['unidad', ['UNIDAD', 'FORMATO']], ['cantidad', ['UDS', 'UNIDADES', 'CANTIDAD', 'CAJA']]];
+  function leerHojaCostes(X, hoja, nombreHoja) {
+    const filas = X.utils.sheet_to_json(hoja, { header: 1, defval: '' });
+    let cab = -1, mapa = null;
+    for (let r = 0; r < Math.min(15, filas.length); r++) {
+      const m = {}; filas[r].forEach(function (c, i) { const t = normNombre(c);
+        COL_COSTES.forEach(function (d) { if (m[d[0]] === undefined && d[1].some(function (k) { return t.indexOf(k) === 0 || t === k; })) m[d[0]] = i; }); });
+      if (m.tipo !== undefined && m.coste !== undefined) { cab = r; mapa = m; break; }
+    }
+    if (cab < 0) return [];
+    const out = [];
+    for (let r = cab + 1; r < filas.length; r++) {
+      const f = filas[r], tipo = txt(f[mapa.tipo]).toUpperCase(), coste = numES(f[mapa.coste]);
+      if (!tipo || coste === null) continue;
+      const cat = mapa.cat !== undefined && txt(f[mapa.cat]) ? txt(f[mapa.cat]) : nombreHoja;
+      const it = { cat: cat, tipo: tipo, coste: Math.round(coste * 10000) / 10000 };
+      if (mapa.iva !== undefined && numES(f[mapa.iva]) !== null) { let iv = numES(f[mapa.iva]); if (iv > 0 && iv < 1) iv = iv * 100; it.iva = Math.round(iv); }
+      if (mapa.unidad !== undefined && txt(f[mapa.unidad])) it.unidad = txt(f[mapa.unidad]).toLowerCase();
+      if (mapa.cantidad !== undefined && numES(f[mapa.cantidad]) !== null) it.cantidad = numES(f[mapa.cantidad]);
+      out.push(it);
+    }
+    return out;
+  }
+  let costesPend = null;
+  window.amCostesExcel = async function (inp) {
+    const f = inp.files && inp.files[0]; inp.value = ''; if (!f) return;
+    try {
+      const X = await sheetJS();
+      const wb = X.read(await f.arrayBuffer(), { type: 'array' });
+      let filas = [];
+      wb.SheetNames.forEach(function (n) { filas = filas.concat(leerHojaCostes(X, wb.Sheets[n], n)); });
+      if (!filas.length) { aviso('No he encontrado precios. El Excel necesita al menos una columna de artículo (TIPO, ARTÍCULO o PRODUCTO) y otra de precio (COSTE o PRECIO).', true); return; }
+      const lista = COSTES_LISTA.categorias || [];
+      const res = { nuevos: [], cambios: [], iguales: 0 };
+      filas.forEach(function (x) {
+        const ck = consumoSectorKey(x.cat) || 'OTROS';
+        const c = lista.filter(function (c2) { return consumoSectorKey(c2.nombre) === ck; })[0];
+        const it = c ? (c.items || []).filter(function (i) { return txt(i.tipo).toUpperCase() === x.tipo; })[0] : null;
+        x.ck = ck;
+        if (!it) res.nuevos.push(x);
+        else if (Number(it.coste) !== x.coste || (x.iva !== undefined && Number(it.iva) !== x.iva)) res.cambios.push({ x: x, antes: it.coste });
+        else res.iguales++;
+      });
+      costesPend = filas;
+      let h = '<div class="am-modal-cab"><h2>Precios del Excel</h2><button class="am-x" data-am-cerrar>✕</button></div>' +
+        '<p><b>' + esc(f.name) + '</b>: ' + filas.length + ' artículos leídos.</p><div class="am-ctl-kpis"><div class="am-ctl-kpi ok"><span>PRECIOS QUE CAMBIAN</span><b>' + res.cambios.length + '</b></div><div class="am-ctl-kpi"><span>ARTÍCULOS NUEVOS</span><b>' + res.nuevos.length + '</b></div><div class="am-ctl-kpi"><span>SIN CAMBIOS</span><b>' + res.iguales + '</b></div></div>';
+      if (res.cambios.length) h += '<h3 class="am-reglas-h">Cambios de precio</h3><div class="am-cr-pl"><table class="am-tabla"><tr><th>Categoría</th><th>Artículo</th><th>Antes</th><th>Ahora</th></tr>' + res.cambios.slice(0, 200).map(function (c) { return '<tr><td>' + esc(c.x.ck) + '</td><td>' + esc(c.x.tipo) + '</td><td>' + esc(c.antes) + ' €</td><td><b>' + esc(c.x.coste) + ' €</b></td></tr>'; }).join('') + '</table></div>';
+      if (res.nuevos.length) h += '<h3 class="am-reglas-h">Artículos nuevos</h3><div class="am-cr-pl"><table class="am-tabla"><tr><th>Categoría</th><th>Artículo</th><th>Precio</th></tr>' + res.nuevos.slice(0, 200).map(function (x) { return '<tr><td>' + esc(x.ck) + '</td><td>' + esc(x.tipo) + '</td><td>' + esc(x.coste) + ' €</td></tr>'; }).join('') + '</table></div>';
+      h += '<p class="am-suave">No se borra nada: se actualizan los precios de los artículos que ya existen y se añaden los nuevos. Las bodas con los costes ya cerrados no cambian.</p><div class="am-fila am-fin"><button class="am-btn" data-am-cerrar>Cancelar</button><button class="am-btn am-prin" onclick="amCostesAplicar()">Aplicar precios</button></div>';
+      modal(h);
+    } catch (err) { aviso('No se ha podido leer el Excel: ' + (err.message || err), true); }
+  };
+  window.amCostesAplicar = function () {
+    if (!costesPend) return;
+    const lista = COSTES_LISTA.categorias = COSTES_LISTA.categorias || [];
+    costesPend.forEach(function (x) {
+      let c = lista.filter(function (c2) { return consumoSectorKey(c2.nombre) === x.ck; })[0];
+      if (!c) { c = { nombre: x.ck, items: [] }; lista.push(c); }
+      c.items = c.items || [];
+      let it = c.items.filter(function (i) { return txt(i.tipo).toUpperCase() === x.tipo; })[0];
+      if (!it) { it = { id: Date.now() + Math.random(), tipo: x.tipo, coste: 0, iva: 21, unidad: 'botellas', cantidad: 1 }; c.items.push(it); }
+      it.coste = x.coste;
+      if (x.iva !== undefined) it.iva = x.iva;
+      if (x.unidad) it.unidad = x.unidad;
+      if (x.cantidad !== undefined) it.cantidad = x.cantidad;
+    });
+    const n = costesPend.length; costesPend = null;
+    cerrarModal(); costesGuardar(); renderCostes(); aviso(n + ' precios aplicados.');
+  };
+  window.amCostesDescargar = async function () {
+    try {
+      const X = await sheetJS();
+      const filas = [['CATEGORIA', 'TIPO', 'UNIDAD', 'UDS/CAJA', 'COSTE', 'IVA']];
+      (COSTES_LISTA.categorias || []).forEach(function (c) { (c.items || []).forEach(function (it) { filas.push([c.nombre, it.tipo, it.unidad, it.cantidad, it.coste, it.iva]); }); });
+      const ws = X.utils.aoa_to_sheet(filas); ws['!cols'] = [{ wch: 18 }, { wch: 34 }, { wch: 10 }, { wch: 9 }, { wch: 9 }, { wch: 6 }];
+      const wb = X.utils.book_new(); X.utils.book_append_sheet(wb, ws, 'COSTES');
+      X.writeFile(wb, 'Costes Alfonso Mira.xlsx');
+    } catch (err) { aviso('No se ha podido crear el Excel: ' + (err.message || err), true); }
+  };
+  envolver('renderCostes', null, function () {
+    const r = document.getElementById('costes-root'); if (!r || r.querySelector('.am-costes-xls')) return;
+    const b = r.querySelector('[onclick="costesImportar()"]'); if (!b) return;
+    b.insertAdjacentHTML('beforebegin', '<label class="am-costes-xls px-3 py-2 rounded-lg bg-white border text-xs font-black text-slate-700 hover:bg-slate-50 cursor-pointer"><i class="fa-solid fa-file-excel mr-1"></i>SUBIR EXCEL DE PRECIOS<input type="file" accept=".xlsx,.xls,.csv,.ods" class="am-oculto" onchange="amCostesExcel(this)"></label>' +
+      '<button class="am-costes-xls px-3 py-2 rounded-lg bg-white border text-xs font-black text-slate-700 hover:bg-slate-50" onclick="amCostesDescargar()"><i class="fa-solid fa-download mr-1"></i>DESCARGAR EXCEL</button>');
+  });
+
+  // ═════════ Imprimir todo: cada hoja aprovecha la página ═════════
+  // Elige la orientación con la que la hoja ocupa menos páginas sin perder tamaño de letra,
+  // y si se pasa poco de un número entero de páginas la reduce lo justo para no dejar una página casi vacía.
+  (function () {
+    const orig = window.hojaBloques;
+    if (typeof orig !== 'function' || typeof PZ_PAPEL === 'undefined') return;
+    function encajar(b) {
+      const P0 = b.horizontal ? PZ_PAPEL.h : PZ_PAPEL.v;
+      const z0 = b.zoom || 1;
+      const W = P0.w / z0; // ancho natural del contenido
+      const opc = [PZ_PAPEL.h, PZ_PAPEL.v].map(function (P) {
+        const z = Math.min(1, P.w / W);
+        const h = pzMedir(b.nodo, W) * z;
+        let pags = h / P.h, zz = z;
+        const k = Math.max(1, Math.floor(pags));
+        if (pags > k && pags <= k + 0.45) { zz = Math.max(z * 0.7, z * k / pags * 0.985); pags = k; }
+        return { P: P, z: zz, pags: Math.ceil(pags - 1e-6), horizontal: P === PZ_PAPEL.h };
+      });
+      opc.sort(function (x, y) { return x.pags - y.pags || y.z - x.z; });
+      const m = opc[0], otra = opc[1];
+      // con igual número de páginas, la orientación que deja la letra más grande
+      const elegida = (m.pags === otra.pags && otra.z > m.z) ? otra : (m.z >= otra.z * 0.78 ? m : otra);
+      b.horizontal = elegida.horizontal; b.zoom = elegida.z;
+    }
+    window.hojaBloques = function () {
+      const bl = orig.apply(this, arguments) || [];
+      bl.forEach(function (b) { try { if (!b.fijo) encajar(b); } catch (err) {} });
+      return bl;
+    };
+  })();
+
   // ═════════ NUE-07 · Plano del cóctel ═════════
   const PC_TIPOS = [
     ['JAMÓN', '#8C3B4E', 120, 50], ['ANDALUZA', '#B5651D', 120, 50], ['QUESOS', '#C48A1E', 120, 50], ['BARRA', '#3F5A2E', 180, 45],
@@ -1723,7 +1858,8 @@
       const nuevos = [
         { id: 'am-ceremonia', t: 'CEREMONIA', pasos: function () { return [paso('am-ceremonia')]; } },
         { id: 'am-finca', t: 'FICHA DE LA FINCA', pasos: function () { const e = evActual(); return e && e.finca_token ? [paso('am-finca', 1500)] : []; } },
-        { id: 'am-planococtel', t: 'PLANO CÓCTEL', pasos: function () { const e = evActual(); return e && e.plano_coctel && (e.plano_coctel.items || []).length ? [paso('am-planococtel')] : []; } }
+        { id: 'am-planococtel', t: 'PLANO CÓCTEL', pasos: function () { const e = evActual(); return e && e.plano_coctel && (e.plano_coctel.items || []).length ? [paso('am-planococtel')] : []; } },
+        { id: 'am-control', t: 'CONTROL DE DOCUMENTACIÓN', pasos: function () { return [paso('am-control')]; } }
       ].filter(function (x) { return x.pasos().length > 0; });
       let i = g.findIndex(function (x) { return x.id === 'protocolo'; });
       if (i < 0) i = g.length - 1;

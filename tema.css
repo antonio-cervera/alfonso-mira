@@ -404,3 +404,19 @@ main button.border-b-2.border-indigo-600:not(#am-x):not(#am-y):hover { backgroun
 .am-plano-fondo { position: absolute; inset: 0; background-position: center; background-repeat: no-repeat; background-size: contain; pointer-events: none; z-index: 0; }
 .am-fondo-ctl { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #DCD6C8; font-size: 12px; }
 .am-fondo-ctl input[type=range] { width: 140px; }
+
+/* Imprimir todo: la zona de impresión ocupa el ancho del papel (sin esto el navegador encogía todas las hojas) */
+@media print {
+  body.print-informe { display: block !important; width: auto !important; height: auto !important; min-width: 0 !important; overflow: visible !important; margin: 0 !important; }
+  body.print-informe #print-zone { width: 100% !important; min-width: 0 !important; }
+  body.print-informe .pz-bloque { width: 100%; overflow: hidden; }
+  body.print-informe .am-barra-auto, body.print-informe .am-fondo-ctl, body.print-informe .am-btn, body.print-informe .inf-print-btn { display: none !important; }
+  body.print-informe .jsw-input.am-auto { background: transparent !important; }
+}
+@media print {
+  body.print-informe #print-zone .h-full, body.print-informe #print-zone .h-screen, body.print-informe #print-zone .min-h-screen, body.print-informe #print-zone .min-h-full { height: auto !important; min-height: 0 !important; }
+}
+@media print {
+  body.print-informe #print-zone [style*="min-height"]:not(.am-mn) { min-height: 0 !important; }
+  body.print-informe #print-zone [class*="min-h-["] { min-height: 0 !important; }
+}
