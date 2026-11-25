@@ -137,10 +137,19 @@
     pax_por_punto_vino_jlv: 200, pax_por_punto_vino_catering: 150,
     pax_por_unidad_jamon: 100, pax_por_punto_jamon: 150, pax_por_punto_quesos: 150,
     pinchos_por_bandeja_mesa: 8, pinchos_por_bandeja_pasada: 10,
-    pinzas_por_plato_pinceado: 2, pax_por_pinza: 4, pescados_por_pala: 20
+    pinzas_por_plato_pinceado: 2, pax_por_pinza: 4, pescados_por_pala: 20,
+    ped_vaso_ducale: 135, ped_copa_tinto: 110, ped_copa_blanco: 135, ped_copa_cava: 90, ped_vaso_sidra: 270,
+    ped_tenedor_trinchero: 180, ped_cuchillo_trinchero: 180, ped_cuchara_postre: 180, ped_cuchara_cafe: 180, ped_redondeo: 5
   };
   let REGLAS = Object.assign({}, REGLAS_BASE);
   function p_(p, k) { return txt(p[k]); }
+  function invitadosDe(e) {
+    const p = e.protocolo || {};
+    let inv = 0;
+    try { const def = prtComensalesDef(p); if (def.fila >= 0) inv = def.total + (parseInt(def.dudas, 10) || 0); } catch (err) {}
+    if (!inv) { try { inv = jswTotals(e).invitados; } catch (err) {} }
+    return inv || 0;
+  }
   function coctelMismo(p) { return p_(p, 'coctel_bebida').toUpperCase().indexOf('MISMO') === 0; }
   const MAPA = [
     ['ig_tinto', 'beb_comida_tinto'], ['ig_blanco', 'beb_comida_blanco'], ['ig_cava', 'beb_comida_espumoso'], ['ig_otro', 'beb_comida_otro'],
@@ -210,10 +219,7 @@
     const R = REGLAS;
     const div = function (a, b) { return num(b) > 0 ? a / num(b) : 0; };
     const arriba = function (v) { return v > 0 ? Math.ceil(v - 1e-9) : ''; };
-    const def = prtComensalesDef(p);
-    let inv = 0;
-    if (def.fila >= 0) inv = def.total + (parseInt(def.dudas, 10) || 0);
-    if (!inv) inv = jswTotals(e).invitados;
+    const inv = invitadosDe(e);
     function calc(clave, valor, texto) { FORMULA_TXT[clave] = texto; poner(clave, valor); }
     // Cóctel: mesas, altas/bajas, lebrillos, puntos de vino, ceniceros
     const tipo = txt(m.ncc_tipo_coctel || p.tipo_coctel).toUpperCase();
@@ -300,7 +306,11 @@
       ['pinchos_por_bandeja_pasada', 'Pinchos por bandeja pasada', 'Pasadas = (pinchos − bandejas a mesa × pinchos por bandeja) ÷ este número.']]],
     ['Sala', [['pinzas_por_plato_pinceado', 'Pinzas por plato pinceado', 'Pinzas = platos pinceados × este número × rangos. Pan: 1 por rango.'],
       ['pax_por_pinza', 'Invitados por pinza (platos con pinza)', 'Pinzas = platos con pinza × invitados ÷ este número.'],
-      ['pescados_por_pala', 'Pescados por plato de palas', 'Platos de palas = nº de pescados ÷ este número.']]]
+      ['pescados_por_pala', 'Pescados por plato de palas', 'Platos de palas = nº de pescados ÷ este número.']]],
+    ['Pedido de material (unidades por cada 100 invitados; 0 = no calcular)', [['ped_vaso_ducale', 'Vaso ducale', 'Valores iniciales tomados de un pedido real de octubre. Solo rellenan cantidades vacías.'],
+      ['ped_copa_tinto', 'Copa vino tinto', ''], ['ped_copa_blanco', 'Copa vino blanco', ''], ['ped_copa_cava', 'Copa cava', ''], ['ped_vaso_sidra', 'Vaso sidra', ''],
+      ['ped_tenedor_trinchero', 'Tenedor trinchero', ''], ['ped_cuchillo_trinchero', 'Cuchillo trinchero', ''], ['ped_cuchara_postre', 'Cuchara postre', ''], ['ped_cuchara_cafe', 'Cuchara café', ''],
+      ['ped_redondeo', 'Redondear hacia arriba a múltiplos de', 'Pala de pescado = nº de pescados de Protocolo (2ª opción).']]]
   ];
   window.amReglas = function () {
     const r = REGLAS;
@@ -562,7 +572,77 @@
       coordinador: personaDe(e, 'COORDINADOR/A') || p_(p, 'coordinador'),
       telefonoFinca: limpiarTel(p_(p, 'finca_tlfno') || fic.telefono || '')
     })) guardarEv();
+    if (pedidoCantidades(e, d)) guardarEv();
+  }, function () { setTimeout(marcarPedido, 0); });
+  const PED_REGLA = { 'VASO DUCALE': 'ped_vaso_ducale', 'COPA VINO TINTO': 'ped_copa_tinto', 'COPA VINO BLANCO': 'ped_copa_blanco', 'COPA CAVA': 'ped_copa_cava',
+    'VASO SIDRA': 'ped_vaso_sidra', 'TENEDOR TRINCHERO': 'ped_tenedor_trinchero', 'CUCHILLO TRINCHERO': 'ped_cuchillo_trinchero', 'CUCHARA POSTRE': 'ped_cuchara_postre', 'CUCHARA CAFE': 'ped_cuchara_cafe' };
+  const PED_TXT = {};
+  function pedidoCantidades(e, d) {
+    const inv = invitadosDe(e), p = e.protocolo || {};
+    const red = Math.max(1, num(REGLAS.ped_redondeo) || 1);
+    const pescado = num((e.jefesala_manual || {}).nsa_mul_n_pescado) || num(p.n_2opcion);
+    let cambio = false;
+    (d.rows || []).forEach(function (r) {
+      const art = normNombre(r.articulo);
+      let v = '', t = '';
+      if (art === 'PALA PESCADO') { v = pescado || ''; t = 'Nº de pescados (2ª opción) de Protocolo'; }
+      else if (PED_REGLA[art] && num(REGLAS[PED_REGLA[art]]) > 0 && inv) {
+        v = Math.ceil(inv * num(REGLAS[PED_REGLA[art]]) / 100 / red - 1e-9) * red;
+        t = 'Invitados (' + inv + ') × ' + REGLAS[PED_REGLA[art]] + ' ÷ 100, redondeado a ' + red;
+      } else return;
+      PED_TXT[art] = t;
+      if (autoCampos(r, { cantidad: v })) cambio = true;
+    });
+    return cambio;
+  }
+  function marcarPedido() {
+    const e = evActual(); if (!e) return;
+    const d = getPedidoData(e);
+    document.querySelectorAll('[onchange^="updatePedidoRow("]').forEach(function (el) {
+      const a = el.getAttribute('onchange') || '';
+      if (a.indexOf("'cantidad'") < 0) return;
+      const i = parseInt(a.slice('updatePedidoRow('.length), 10);
+      const r = d.rows[i]; if (!r) return;
+      const auto = r._auto && r._auto.cantidad !== undefined && txt(r.cantidad) === txt(r._auto.cantidad);
+      el.classList.toggle('am-auto', !!auto);
+      if (auto) el.title = 'Calculado: ' + (PED_TXT[normNombre(r.articulo)] || '') + '. Si escribes otro valor, manda el tuyo.'; else el.removeAttribute('title');
+    });
+  }
+
+  // ═════════ Protocolo: campos que repetían otro dato ═════════
+  // Buffet de quesos · PAX CONTRATADOS = adultos del número definitivo (en el Excel: =C34)
+  envolver('renderProtocolo', function () {
+    const e = evActual(); if (!e || enVision()) return;
+    if (!e.protocolo) e.protocolo = {};
+    let ad = '';
+    try { const def = prtComensalesDef(e.protocolo); if (def.fila >= 0) ad = def.adultos; } catch (err) {}
+    if (autoCampos(e.protocolo, { quesos_pax: ad })) guardarEv();
   }, null);
+
+  // ═════════ Menús especiales: varias personas en un mismo nombre ═════════
+  // En la hoja de Google, CANTIDAD cuenta los nombres separados por comas, «y» o saltos de línea.
+  function partirNombres(s) {
+    let t = String(s || '');
+    ['\n', ',', ';', '/', '+', ' y ', ' Y ', ' e ', ' E '].forEach(function (sep) { t = t.split(sep).join('|'); });
+    return t.split('|').map(function (x) { return x.trim(); }).filter(function (x) { return x; });
+  }
+  (function () {
+    const orig = window.meBoxes;
+    if (typeof orig !== 'function') return;
+    window.meBoxes = function () {
+      const cajas = orig.apply(this, arguments);
+      (cajas || []).forEach(function (b) {
+        const l = [];
+        (b.personas || []).forEach(function (x) {
+          const n = partirNombres(x.nombre);
+          if (n.length < 2) { l.push(x); return; }
+          n.forEach(function (nom) { l.push(Object.assign({}, x, { nombre: nom })); });
+        });
+        b.personas = l;
+      });
+      return cajas;
+    };
+  })();
   envolver('renderMaterialesView', function () {
     const e = evActual(); if (!e || !e.materiales) return;
     if (autoCampos(e.materiales, { coordinador: personaDe(e, 'COORDINADOR/A') || p_(e.protocolo || {}, 'coordinador') })) guardarEv();
@@ -738,8 +818,59 @@
       h += '</div>';
     });
     h += '</div><p class="am-suave">Las fechas de montaje y recogida salen de la FICHA DE LA FINCA; las de decoración y detalles, de PROTOCOLO.</p>';
+    if (!DIR.length && puedePlan()) { try { await cargarDirectorio(); } catch (err) {} }
+    h += personalSemana(dias, evs);
     root.innerHTML = h;
   }
+  // Personal de la semana: sustituye la hoja a mano (una columna por boda, hora de entrada y confirmación)
+  function personalSemana(dias, evs) {
+    const edita = puedePlan() && !enVision();
+    let h = '<div class="am-bloque"><h3 class="am-reglas-h">PERSONAL DE LA SEMANA</h3>' +
+      '<p class="am-suave">Sale del LISTADO DE PERSONAL de cada boda. Marca la casilla cuando la persona confirme. En rojo, quien está en dos bodas el mismo día.</p>';
+    let alguno = false;
+    dias.forEach(function (d, i) {
+      const iso = isoDe(d);
+      const delDia = evs.filter(function (o) { return o.e.fecha === iso; });
+      if (!delDia.length) return;
+      alguno = true;
+      const cuenta = {};
+      delDia.forEach(function (o) { (o.e.camareros || []).forEach(function (c) { const k = normNombre(c.nombre); if (k) cuenta[k] = (cuenta[k] || 0) + 1; }); });
+      h += '<div class="am-ps-dia"><div class="am-ps-dia-t">' + DIAS[i] + ' ' + d.getDate() + ' ' + MESES[d.getMonth()] + '</div><div class="am-ps-cols">';
+      delDia.forEach(function (o) {
+        const cams = (o.e.camareros || []).filter(function (c) { return txt(c.nombre); })
+          .sort(function (a, b) { return (txt(a.entrada) || '99').localeCompare(txt(b.entrada) || '99') || txt(a.nombre).localeCompare(txt(b.nombre)); });
+        const conf = cams.filter(function (c) { return c.confirmado; }).length;
+        h += '<div class="am-ps-col"><div class="am-ps-cab" onclick="abrirEvento(\'' + o.id + '\', true)" title="Abrir la boda"><b>' + esc(o.e.boda) + '</b><span>' + esc(txt(o.e.hora) || '--:--') + ' · ' + esc(o.e.ubicacion) + '</span>' +
+          '<span class="am-ps-n' + (cams.length && conf === cams.length ? ' ok' : '') + '">' + conf + ' / ' + cams.length + ' confirmados</span></div>';
+        if (!cams.length) h += '<div class="am-vacio">Sin personal en el listado</div>';
+        cams.forEach(function (c) {
+          const dup = cuenta[normNombre(c.nombre)] > 1;
+          h += '<label class="am-ps-fila' + (dup ? ' dup' : '') + (c.confirmado ? ' conf' : '') + '"' + (dup ? ' title="Está en dos bodas el mismo día"' : '') + '>' +
+            '<input type="checkbox"' + (c.confirmado ? ' checked' : '') + (edita ? '' : ' disabled') + ' onchange="amConfirmar(\'' + o.id + '\',' + esc(JSON.stringify(c.id)) + ',this.checked)">' +
+            '<span class="am-ps-h">' + esc(txt(c.entrada) || '--:--') + '</span><span class="am-ps-nom">' + esc(txt(c.nombre).toUpperCase()) + '</span><span class="am-ps-eq">' + esc(txt(c.equipo) && txt(c.equipo) !== '-' ? txt(c.equipo) : txt(c.responsabilidad).toUpperCase()) + '</span></label>';
+        });
+        h += '</div>';
+      });
+      if (DIR.length) {
+        const libres = DIR.filter(function (p) {
+          const claves = [normNombre(p.nombre)].concat((p.alias || []).map(normNombre));
+          return !claves.some(function (k) { return cuenta[k]; });
+        }).map(function (p) { return txt(p.nombre).toUpperCase(); }).sort();
+        h += '<div class="am-ps-col am-ps-libres"><div class="am-ps-cab"><b>SIN ASIGNAR</b><span>' + libres.length + ' personas del directorio</span></div>' +
+          (libres.length ? '<div class="am-ps-chips">' + libres.map(function (n) { return '<span>' + esc(n) + '</span>'; }).join('') + '</div>' : '<div class="am-vacio">—</div>') + '</div>';
+      }
+      h += '</div></div>';
+    });
+    if (!alguno) h += '<div class="am-vacio">No hay bodas esta semana.</div>';
+    return h + '</div>';
+  }
+  window.amConfirmar = function (evId, camId, si) {
+    const e = appData.events[evId]; if (!e || !puedePlan()) return;
+    const c = (e.camareros || []).filter(function (x) { return x.id === camId; })[0]; if (!c) return;
+    c.confirmado = !!si;
+    try { pendingSaveIds.add(evId); updateSaveIndicator(); saveEventNow(evId); } catch (err) { console.warn(err); }
+    renderPlanning();
+  };
   window.amSemana = function (d) { if (d === 0) semana = lunesDe(new Date()); else { semana = new Date(semana); semana.setDate(semana.getDate() + 7 * d); } renderPlanning(); };
 
   // ═════════ NUE-07 · Plano del cóctel ═════════

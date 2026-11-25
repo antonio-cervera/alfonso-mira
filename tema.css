@@ -278,3 +278,23 @@ body:not(.rol-admin) .am-solo-admin { display: none !important; }
 .am-reglas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 14px; }
 .am-reglas-h { font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 16px; color: var(--am-verde-osc); margin: 14px 0 6px; }
 @media (max-width: 640px) { .am-reglas { grid-template-columns: 1fr; } }
+
+/* Planning · personal de la semana */
+.am-ps-dia { margin-top: 14px; }
+.am-ps-dia-t { font-weight: 800; color: var(--am-verde-osc); letter-spacing: .04em; margin-bottom: 6px; text-transform: uppercase; }
+.am-ps-cols { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start; }
+.am-ps-col { flex: 1 1 230px; max-width: 320px; border: 1px solid #DCD6C8; border-radius: 10px; background: #fff; overflow: hidden; }
+.am-ps-cab { background: #3F5A2E; color: #fff; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; cursor: pointer; }
+.am-ps-cab span { font-size: 11px; opacity: .9; }
+.am-ps-n { font-weight: 700; }
+.am-ps-n.ok { color: #D9F2C4; }
+.am-ps-libres .am-ps-cab { background: #7A7163; cursor: default; }
+.am-ps-fila { display: grid; grid-template-columns: 18px 44px 1fr auto; gap: 6px; align-items: center; padding: 5px 10px; border-top: 1px solid #EFEBE2; font-size: 12px; cursor: pointer; }
+.am-ps-fila.conf { background: #EEF3E8; }
+.am-ps-fila.dup { background: #F8E1DC; color: #8C2F1E; }
+.am-ps-h { font-variant-numeric: tabular-nums; color: #5C5446; }
+.am-ps-nom { font-weight: 700; }
+.am-ps-eq { font-size: 10px; color: #7A7163; }
+.am-ps-chips { display: flex; flex-wrap: wrap; gap: 4px; padding: 8px; }
+.am-ps-chips span { background: #F1EEE7; border-radius: 999px; padding: 2px 8px; font-size: 11px; }
+@media print { .am-ps-fila input { display: none; } }
