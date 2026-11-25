@@ -27,6 +27,17 @@ service cloud.firestore {
       allow write: if canPlan();
     }
 
+    match /config/cronograma {
+      allow read: if isStaff();
+      allow write: if canPlan();
+    }
+
+    // Cronograma de logística semanal: lo marcan administración, coordinación y jefe de sala
+    match /cronograma/{semana} {
+      allow read: if isStaff();
+      allow write: if canEdit();
+    }
+
     match /personal/{id} {
       allow read: if isStaff();
       allow write: if canPlan();

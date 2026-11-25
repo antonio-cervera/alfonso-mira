@@ -88,6 +88,8 @@
     'am-ceremonia': { titulo: 'CEREMONIA', nivel: 'jsw', render: function () { renderCeremonia(); } },
     'am-finca': { titulo: 'FICHA DE LA FINCA', nivel: 'jsw', render: function () { renderFinca(); } },
     'am-minutas': { titulo: 'MINUTAS PARA IMPRIMIR', nivel: 'jsw', render: function () { renderMinutas(); } },
+    'am-control': { titulo: 'CONTROL DE DOCUMENTACIÓN', nivel: 'jsw', render: function () { renderControl(); } },
+    'am-cronograma': { titulo: 'CRONOGRAMA LOGÍSTICA', nivel: 'top', render: function () { renderCronograma(); } },
     'am-planococtel': { titulo: 'PLANO CÓCTEL', nivel: 'coord', render: function () { renderPlanoCoctel(); } }
   };
   function crearMenu() {
@@ -95,6 +97,7 @@
     if (historico && !document.getElementById('tab-am-planning')) {
       historico.insertAdjacentHTML('afterend',
         '<button onclick="switchTab(\'am-planning\')" id="tab-am-planning" class="nav-btn"><i class="fa-solid fa-calendar-week w-6 text-center mr-2"></i> PLANNING SEMANAL</button>' +
+        '<button onclick="switchTab(\'am-cronograma\')" id="tab-am-cronograma" class="nav-btn"><i class="fa-solid fa-list-check w-6 text-center mr-2"></i> CRONOGRAMA LOGÍSTICA</button>' +
         '<button onclick="switchTab(\'am-personal\')" id="tab-am-personal" class="nav-btn am-solo-plan"><i class="fa-solid fa-address-book w-6 text-center mr-2"></i> PERSONAL</button>' +
         '<button onclick="switchTab(\'am-papelera\')" id="tab-am-papelera" class="nav-btn am-solo-admin"><i class="fa-solid fa-trash-can-arrow-up w-6 text-center mr-2"></i> PAPELERA</button>');
     }
@@ -104,7 +107,8 @@
     const ficha = document.getElementById('tab-jsw-fichainfo');
     if (ficha && !document.getElementById('tab-am-finca')) ficha.insertAdjacentHTML('afterend', '<button onclick="switchTab(\'am-finca\')" id="tab-am-finca" class="' + sub + '">FICHA DE LA FINCA</button>');
     const mcam = document.getElementById('tab-jsw-minutacamareros');
-    if (mcam && !document.getElementById('tab-am-minutas')) mcam.insertAdjacentHTML('afterend', '<button onclick="switchTab(\'am-minutas\')" id="tab-am-minutas" class="' + sub + '"><i class="fa-solid fa-print mr-1"></i>MINUTAS PARA IMPRIMIR</button>');
+    if (mcam && !document.getElementById('tab-am-minutas')) mcam.insertAdjacentHTML('afterend', '<button onclick="switchTab(\'am-minutas\')" id="tab-am-minutas" class="' + sub + '"><i class="fa-solid fa-print mr-1"></i>MINUTAS PARA IMPRIMIR</button>' +
+      '<button onclick="switchTab(\'am-control\')" id="tab-am-control" class="' + sub + '"><i class="fa-solid fa-clipboard-check mr-1"></i>CONTROL DOCUMENTACIÓN</button>');
     const plano = document.getElementById('tab-plano');
     if (plano && !document.getElementById('tab-am-planococtel')) plano.insertAdjacentHTML('afterend', '<button onclick="switchTab(\'am-planococtel\')" id="tab-am-planococtel" class="' + sub + '">PLANO CÓCTEL</button>');
     const main = document.querySelector('main');
@@ -1119,6 +1123,240 @@
     };
     window.addEventListener('afterprint', fin);
     window.print();
+  };
+
+  // ═════════ Control de documentación (hoja FEEDBACK DOCU BODAS) ═════════
+  // Cada ítem se comprueba solo con lo que ya hay en la app. RRHH o el jefe de sala dan el visto bueno y deciden la gratificación.
+  function ctlChk(e, kind, tk) {
+    let r = null; try { r = evHojasCheck(kind, tk, e); } catch (err) { return null; }
+    const s = e.evaluaciones || {};
+    if (s[kind + '_' + tk + '_real'] === 'SI') return { v: 'SI', d: 'Marcada como realizada' };
+    if (!r || !r.total) return null;
+    if (r.pct >= 100) return { v: 'SI', d: r.hechas + ' de ' + r.total + ' tareas' };
+    return { v: r.hechas ? 'PARCIAL' : 'NO', d: r.hechas + ' de ' + r.total + ' tareas (' + r.pct + ' %)' };
+  }
+  function ctlEquipo(e, kind) {
+    const s = e.evaluaciones || {};
+    if (s[kind + '_equipo_real'] === 'SI') return { v: 'SI', d: 'Marcada como realizada' };
+    const f = (s[kind + '_equipo_filas'] || []).filter(function (x) { return txt(x.nombre); });
+    const hechas = f.filter(function (x) { return txt(x.mejora) || txt(x.fortaleza); }).length;
+    if (!f.length) return { v: 'NO', d: 'Sin personas evaluadas' };
+    return { v: hechas >= f.length ? 'SI' : (hechas ? 'PARCIAL' : 'NO'), d: hechas + ' de ' + f.length + ' personas evaluadas' };
+  }
+  function ctlConsumo(e, k) { const c = e[k] || {}; return (txt(c.responsable) || txt(c.hora_fin)) ? { v: 'SI', d: 'Responsable: ' + (txt(c.responsable) || '—') } : { v: 'NO', d: 'Sin responsable ni hora de cierre' }; }
+  function ctlRecuento(e, k) {
+    const l = ((e.materiales || {})[k] || []).filter(function (x) { return txt(x.articulo); });
+    const con = l.filter(function (x) { return txt(x.unidades) !== ''; }).length;
+    if (!l.length) return { v: 'NO', d: 'Sin artículos' };
+    return { v: con >= l.length ? 'SI' : (con ? 'PARCIAL' : 'NO'), d: con + ' de ' + l.length + ' artículos contados' };
+  }
+  function ctlTiming(e) { const s = e.evaluaciones || {}; const t = Object.assign({}, s.wedding_timing || {}, s.jefesala_timing || {}); const n = Object.keys(t).filter(function (k) { return t[k] && t[k].h; }).length; return n ? { v: 'SI', d: n + ' horas anotadas' } : { v: 'NO', d: 'Sin horas en el Timing' }; }
+  function ctlPlano(e) { const n = (e.items || []).filter(function (i) { return i.entity === 'mesa'; }).length; return n ? { v: 'SI', d: n + ' mesas en el plano' } : { v: 'NO', d: 'Plano vacío' }; }
+  function ctlEquipos(e) {
+    const m = e.jefesala_manual || {}, er = e.equipos_realizada || {};
+    const k = ['ig_realizada', 'nsa_realizada', 'ncc_realizada', 'nco_realizada', 'nof_realizada', 'nbl_realizada'];
+    const si = k.filter(function (x) { return txt(m[x]).toUpperCase().indexOf('S') === 0; }).length;
+    if (er.jefesala || si === k.length) return { v: 'SI', d: 'Hoja de equipos realizada' };
+    return { v: si ? 'PARCIAL' : 'NO', d: si + ' de ' + k.length + ' bloques marcados como realizados' };
+  }
+  function ctlEspeciales(e) { let n = 0; try { n = meBoxes(e).length; } catch (err) {} return n ? { v: 'SI', d: n + ' cuadros de menús especiales' } : { v: 'NA', d: 'Sin menús especiales en Protocolo' }; }
+  function ctlProtocolo(e) { const n = Object.keys(e.protocolo || {}).filter(function (k) { return txt(e.protocolo[k]) && k.charAt(0) !== '_'; }).length; return n > 15 ? { v: 'SI', d: n + ' datos en Protocolo' } : { v: n ? 'PARCIAL' : 'NO', d: n + ' datos en Protocolo' }; }
+  const AUTO_APP = function (f) { return function (e) { const r = f(e); return r.v === 'SI' ? { v: 'SI', d: 'Disponible al momento en la app' } : r; }; };
+  const CTL_ROLES = [
+    { k: 'jefesala', t: 'JEFE/A DE SALA', vb: 'VISTO BUENO RRHH', resp: 'JEFE/A SALA', items: [
+      ['Accesos coordinadores', null], ['Plano realizado', ctlPlano], ['Plano subido a carpeta coordinadores', AUTO_APP(ctlPlano)],
+      ['Equipos realizados', ctlEquipos], ['Equipos subidos a carpeta de coordinadores', AUTO_APP(ctlEquipos)],
+      ['Check list de preservicio', function (e) { return ctlChk(e, 'jefesala', 'pre'); }], ['Check list de post servicio', function (e) { return ctlChk(e, 'jefesala', 'post'); }],
+      ['Evaluación de personal', function (e) { return ctlEquipo(e, 'jefesala'); }], ['Correo de informe final de boda (incidencias, puntos de mejora, feedback cliente)', null]] },
+    { k: 'wedding', t: 'WEDDING PLANNER', vb: 'VISTO BUENO JEFE DE SALA', resp: 'WEDDING', items: [
+      ['Plano realizado subido', ctlPlano], ['Tabla de menús especiales', ctlEspeciales], ['Plantilla de protocolo subida', ctlProtocolo],
+      ['Check list de preservicio', function (e) { return ctlChk(e, 'wedding', 'pre'); }], ['Check list servicio', function (e) { return ctlChk(e, 'wedding', 'serv'); }],
+      ['Check list de post servicio', function (e) { return ctlChk(e, 'wedding', 'post'); }], ['Timing del evento', ctlTiming], ['Entrega de fotos, vídeos y testimonios', null],
+      ['Evaluación del Jefe de sala', function (e) { return ctlChk(e, 'jefesala', 'serv') || ctlEquipo(e, 'jefesala'); }], ['Correo de informe final de boda', null]] },
+    { k: 'sala', t: 'COORDINADOR/A SALA', vb: 'VISTO BUENO JEFE DE SALA', eq: 'SALA', items: [
+      ['Check list de preservicio', function (e) { return ctlChk(e, 'coordinador', 'pre'); }], ['Check list de post servicio', function (e) { return ctlChk(e, 'coordinador', 'post'); }],
+      ['Evaluación de personal', function (e) { return ctlEquipo(e, 'coordinador'); }], ['Recuento de mantelería', function (e) { return ctlRecuento(e, 'manteleria'); }],
+      ['Recuento material alquiler (catering)', function (e) { return ctlRecuento(e, 'cuberteria'); }], ['Consumo', function (e) { return ctlConsumo(e, 'consumos_comida'); }]] },
+    { k: 'coctel', t: 'COORDINADOR/A CÓCTEL', vb: 'VISTO BUENO JEFE DE SALA', eq: 'COCTEL', items: [
+      ['Check list de preservicio', function (e) { return ctlChk(e, 'coctel', 'pre'); }], ['Check list de post servicio', function (e) { return ctlChk(e, 'coctel', 'post'); }],
+      ['Evaluación de personal', function (e) { return ctlEquipo(e, 'coctel'); }], ['Recuento de mantelería', function (e) { return ctlRecuento(e, 'manteleria'); }],
+      ['Recuento material alquiler (catering)', function (e) { return ctlRecuento(e, 'cuberteria'); }], ['Consumo', function (e) { return ctlConsumo(e, 'consumos_cocktail'); }]] },
+    { k: 'office', t: 'COORDINADOR/A OFFICE', vb: 'VISTO BUENO JEFE DE SALA', eq: 'OFFICE', items: [
+      ['Check list de preservicio', function (e) { return ctlChk(e, 'office', 'pre'); }], ['Check list de post servicio', function (e) { return ctlChk(e, 'office', 'post'); }],
+      ['Evaluación de personal', function (e) { return ctlEquipo(e, 'office'); }], ['Recuento material alquiler (catering)', function (e) { return ctlRecuento(e, 'cuberteria'); }], ['Consumo', null]] },
+    { k: 'cocina', t: 'COORDINADOR/A COCINA', vb: 'VISTO BUENO JEFE DE SALA', eq: 'COCINA', items: [
+      ['Check list de preservicio', function (e) { return ctlChk(e, 'cocina', 'pre'); }], ['Check list de post servicio', function (e) { return ctlChk(e, 'cocina', 'post'); }],
+      ['Evaluación de personal', function (e) { return ctlEquipo(e, 'cocina'); }], ['Recuento material alquiler (catering)', function (e) { return ctlRecuento(e, 'cuberteria'); }]] },
+    { k: 'barra', t: 'COORDINADOR/A BARRA', vb: 'VISTO BUENO JEFE DE SALA', eq: 'BARRA', items: [
+      ['Check list de preservicio', function (e) { return ctlChk(e, 'barralibre', 'pre'); }], ['Check list de post servicio', function (e) { return ctlChk(e, 'barralibre', 'post'); }],
+      ['Evaluación de personal', function (e) { return ctlEquipo(e, 'barralibre'); }], ['Consumos', function (e) { return ctlConsumo(e, 'consumos_barra'); }]] }
+  ];
+  function ctlNombre(e, r) {
+    if (r.resp) { const n = personaDe(e, r.resp === 'WEDDING' ? 'WEDDING' : r.resp); if (n) return n; }
+    if (r.eq) { try { const l = tsCamareros(e).filter(function (x) { return x.leader && normNombre(x.equipo).indexOf(r.eq) >= 0; }); if (l.length) return txt(l[0].cam.nombre); } catch (err) {} }
+    return '';
+  }
+  function ctl(e) { if (!e.control_doc || typeof e.control_doc !== 'object') e.control_doc = {}; return e.control_doc; }
+  const CTL_TXT = { SI: 'SÍ', NO: 'NO', PARCIAL: 'A MEDIAS', NA: 'NO APLICA' };
+  function ctlEstado(e) {
+    const c = ctl(e), out = {};
+    CTL_ROLES.forEach(function (r) {
+      const d = c[r.k] || {}; const its = d.items || {};
+      const filas = r.items.map(function (it, i) {
+        const auto = it[1] ? it[1](e) : null; const man = its[i] || {};
+        const v = txt(man.v) || (auto ? auto.v : '');
+        return { t: it[0], auto: auto, man: txt(man.v), v: v, obs: txt(man.obs) };
+      });
+      const cuenta = filas.filter(function (f) { return f.v !== 'NA'; });
+      const ok = cuenta.filter(function (f) { return f.v === 'SI'; }).length;
+      out[r.k] = { filas: filas, ok: ok, total: cuenta.length, completo: ok === cuenta.length && cuenta.length > 0, d: d };
+    });
+    return out;
+  }
+  function renderControl() {
+    const root = document.getElementById('am-root-am-control');
+    const e = evActual(); if (!e) return;
+    const est = ctlEstado(e), edita = puedePlan() && !enVision();
+    let h = cabecera('CONTROL DE DOCUMENTACIÓN');
+    h += '<p class="am-suave">Cada ítem se comprueba solo con lo que se ha rellenado en la app (check lists, evaluaciones, plano, equipos, recuentos, consumos y timing). Puedes corregir el estado a mano: manda lo que elijas. La gratificación se propone sola cuando todo está hecho.</p>';
+    h += '<div class="am-ctl-kpis">' + CTL_ROLES.map(function (r) { const x = est[r.k]; return '<div class="am-ctl-kpi' + (x.completo ? ' ok' : '') + '"><span>' + esc(r.t) + '</span><b>' + x.ok + ' / ' + x.total + '</b></div>'; }).join('') + '</div>';
+    CTL_ROLES.forEach(function (r) {
+      const x = est[r.k], d = x.d;
+      const grat = txt(d.gratif) || (x.completo ? 'SI' : '');
+      h += '<div class="am-bloque am-ctl"><div class="am-ctl-cab"><div><b>' + esc(r.t) + ':</b> <input class="am-ctl-in" placeholder="Nombre" value="' + esc(txt(d.nombre) || ctlNombre(e, r)) + '" ' + (edita ? 'onchange="amCtl(\'' + r.k + '\',\'nombre\',this.value)"' : 'disabled') + '></div>' +
+        '<div class="am-ctl-vb">' + esc(r.vb) + ': <input class="am-ctl-in" placeholder="Firma / nombre" value="' + esc(txt(d.vb)) + '" ' + (edita ? 'onchange="amCtl(\'' + r.k + '\',\'vb\',this.value)"' : 'disabled') + '></div></div>';
+      h += '<table class="am-tabla am-ctl-tab"><thead><tr><th>ÍTEM DE CONTROL</th><th>COMPROBACIÓN AUTOMÁTICA</th><th class="am-c">CONTROL DE ACCIÓN</th><th>OBSERVACIONES</th></tr></thead><tbody>';
+      x.filas.forEach(function (f, i) {
+        const a = f.auto;
+        h += '<tr><td><b>' + esc(f.t) + '</b></td><td>' + (a ? '<span class="am-ctl-b ' + a.v + '">' + CTL_TXT[a.v] + '</span> <small>' + esc(a.d) + '</small>' : '<small class="am-suave">Se marca a mano</small>') + '</td>' +
+          '<td class="am-c"><select class="am-ctl-sel ' + esc(f.v) + '" ' + (edita ? 'onchange="amCtlItem(\'' + r.k + '\',' + i + ',\'v\',this.value)"' : 'disabled') + '><option value="">' + (a ? 'Automático (' + CTL_TXT[a.v] + ')' : '—') + '</option>' +
+          ['SI', 'NO', 'PARCIAL', 'NA'].map(function (o) { return '<option value="' + o + '"' + (f.man === o ? ' selected' : '') + '>' + CTL_TXT[o] + '</option>'; }).join('') + '</select></td>' +
+          '<td><input class="am-ctl-in" value="' + esc(f.obs) + '" placeholder="' + (f.v === 'NO' || f.v === 'PARCIAL' ? 'Justificar por qué' : '') + '" ' + (edita ? 'onchange="amCtlItem(\'' + r.k + '\',' + i + ',\'obs\',this.value)"' : 'disabled') + '></td></tr>';
+      });
+      h += '</tbody></table><div class="am-ctl-pie"><span>' + x.ok + ' de ' + x.total + ' hechos</span><label>COBRO DE GRATIFICACIÓN: <select class="am-ctl-sel ' + grat + '" ' + (edita ? 'onchange="amCtl(\'' + r.k + '\',\'gratif\',this.value)"' : 'disabled') + '><option value="">' + (x.completo ? 'SÍ (propuesta)' : 'Pendiente') + '</option><option value="SI"' + (txt(d.gratif) === 'SI' ? ' selected' : '') + '>SÍ</option><option value="NO"' + (txt(d.gratif) === 'NO' ? ' selected' : '') + '>NO</option></select></label></div></div>';
+    });
+    root.innerHTML = h + '<div class="am-fila am-fin"><button class="inf-print-btn" onclick="amImprimir(this)"><i class="fa-solid fa-print mr-1"></i>IMPRIMIR / PDF</button></div>';
+  }
+  window.amCtl = function (rol, k, v) { const c = ctl(evActual()); c[rol] = c[rol] || {}; c[rol][k] = v; guardarEv(); renderControl(); };
+  window.amCtlItem = function (rol, i, k, v) { const c = ctl(evActual()); c[rol] = c[rol] || {}; c[rol].items = c[rol].items || {}; c[rol].items[i] = c[rol].items[i] || {}; c[rol].items[i][k] = v; guardarEv(); renderControl(); };
+
+  // ═════════ Cronograma de logística semanal (plantilla REVE01-22) ═════════
+  const CR_AREAS = { 'CÓCTEL': '#6AA84F', 'SALA': '#3D85C6', 'COCINA': '#E69138', 'OFFICE': '#F6B26B', 'PLANIFICACIÓN': '#8E7CC3', 'DESMONTAJE Y CIERRE': '#7A7163' };
+  const CR_ESTADOS = ['Pendiente', 'En proceso', 'Realizada', 'Incidencia'];
+  const CR_PRIO = ['Baja', 'Media', 'Alta (crítica)'];
+  const CR_BASE = [
+    ['CÓCTEL', 'LUNES', 'Limpieza y vaciado de ceniceros metálicos pilares salón', 'Equipo montaje', 'Baja'],
+    ['CÓCTEL', 'LUNES', 'Colocación y orden del material de catering', 'Encargado logística', 'Media'],
+    ['CÓCTEL', 'JUEVES', 'Limpieza gruesa zona cóctel', 'Equipo montaje', 'Media'],
+    ['CÓCTEL', 'JUEVES', 'Encender botellero barra cóctel/office', 'Bartender / Coctelería', 'Alta (crítica)'],
+    ['CÓCTEL', 'JUEVES-VIERNES', 'Montaje estructura sombraje', 'Equipo montaje', 'Alta (crítica)'],
+    ['CÓCTEL', 'JUEVES-VIERNES', 'Revisar, limpiar y ubicar caravana', 'Encargado logística', 'Media'],
+    ['CÓCTEL', 'JUEVES-VIERNES', 'Material para ceremonia', 'Maître / Jefa de sala', 'Alta (crítica)'],
+    ['CÓCTEL', 'JUEVES-VIERNES', 'Material para cóctel', 'Bartender / Coctelería', 'Alta (crítica)'],
+    ['SALA', 'LUNES', 'Limpieza carpa, barrido, fregado y limpieza mesas auxiliares', 'Equipo montaje', 'Media'],
+    ['SALA', 'LUNES', 'Clasificación-contabilizar mantelería, mesas evento, auxiliares, de todos los salones y catering (libreta de control)', 'Encargado logística', 'Alta (crítica)'],
+    ['SALA', 'LUNES', 'Preparación esqueleto evento próximo', 'Equipo montaje', 'Media'],
+    ['SALA', 'MIÉRCOLES', 'Colocar mantelería en esqueleto siguiendo plano montaje (si no llega la del evento, poner la nuestra para imagen de venta y visitas de novios)', 'Maître / Jefa de sala', 'Alta (crítica)'],
+    ['SALA', 'JUEVES', 'Material organizado y ordenado listo para montaje', 'Encargado logística', 'Media'],
+    ['SALA', 'JUEVES', 'Isla bien ordenada y limpia', 'Maître / Jefa de sala', 'Media'],
+    ['SALA', 'JUEVES', 'Colocación de material que no es para montaje en su lugar', 'Equipo montaje', 'Baja'],
+    ['SALA', 'JUEVES', 'Encender cámaras', 'Encargado logística', 'Alta (crítica)'],
+    ['SALA', 'VIERNES', 'Colocar mantelería en mesas auxiliares y cámaras', 'Maître / Jefa de sala', 'Media'],
+    ['SALA', 'VIERNES', 'Montaje de la sala (marcaje, cristalería, minutas y meseros)', 'Maître / Jefa de sala', 'Alta (crítica)'],
+    ['COCINA', 'JUEVES', 'Barra y mueble de barra libre limpio y ordenado', 'Bartender / Coctelería', 'Media'],
+    ['COCINA', 'VIERNES', 'Cubiertos repasados y ordenados', 'Responsable office', 'Alta (crítica)'],
+    ['OFFICE', 'LUNES', 'Revisión y organización de almacenes y limpieza', 'Responsable office', 'Media'],
+    ['OFFICE', 'LUNES', 'Mesas limpias de emplate office-banquete', 'Jefe de cocina', 'Alta (crítica)'],
+    ['OFFICE', 'LUNES', 'Material de limpieza en su sitio y completo', 'Responsable office', 'Baja'],
+    ['OFFICE', 'LUNES', 'Revisión material, faltas, pedidos, roturas y puntos de mejora', 'Encargado logística', 'Alta (crítica)'],
+    ['OFFICE', 'MIÉRCOLES', 'Atender proveedores, recepción de mercancías-bebidas y su distribución por zonas según eventos', 'Encargado logística', 'Alta (crítica)'],
+    ['OFFICE', 'MIÉRCOLES', 'Recepción de mantelería y supervisar con hojas de protocolo de los eventos y cantidades con proveedor', 'Maître / Jefa de sala', 'Alta (crítica)'],
+    ['OFFICE', 'JUEVES', 'Colocar bebida y cargar cámaras de salones y de almacenamiento, comprobar funcionamiento (gallinero)', 'Encargado logística', 'Alta (crítica)'],
+    ['OFFICE', 'VIERNES', 'Copas repasadas y ordenadas', 'Responsable office', 'Alta (crítica)'],
+    ['PLANIFICACIÓN', 'JUEVES', 'Valoración de la situación de la puesta a punto y decidir', 'Responsable eventos', 'Alta (crítica)'],
+    ['PLANIFICACIÓN', 'VIERNES', 'Control de alérgenos, intolerancias y menús especiales (seating y marcaje en plano)', 'Maître / Jefa de sala', 'Alta (crítica)'],
+    ['SALA', 'SÁBADO (DÍA D)', 'Prueba de sonido, iluminación ambiental, climatización y audiovisual ceremonia/banquete', 'Responsable eventos', 'Alta (crítica)'],
+    ['SALA', 'SÁBADO (DÍA D)', 'Briefing operativo con equipo de sala y extras (reparto rangos, timing, alérgenos y protocolo)', 'Maître / Jefa de sala', 'Alta (crítica)'],
+    ['COCINA', 'SÁBADO (DÍA D)', 'Verificación pase caliente, calientaplatos, regeneración y circuito marcha hacia adelante', 'Jefe de cocina', 'Alta (crítica)'],
+    ['DESMONTAJE Y CIERRE', 'SÁBADO (DÍA D)', 'Desbarase selectivo, clasificación de menaje sucio en bateas y control de roturas', 'Responsable office', 'Media'],
+    ['DESMONTAJE Y CIERRE', 'DOMINGO (POST-EVENTO)', 'Cierre de evento: inventario de devolución de mantelería, control excedentes APPCC y acta final', 'Encargado logística', 'Media']
+  ];
+  let crSemana = null, crDoc = null, crPlantilla = null, crFiltro = '';
+  function crBase() { return CR_BASE.map(function (x, i) { return { id: 'LOG-' + ('0' + (i + 1)).slice(-2), area: x[0], dia: x[1], tarea: x[2], resp: x[3], prio: x[4] }; }); }
+  async function crCargar() {
+    const a = api();
+    if (!crPlantilla) { try { const p = await a.leer('config', 'cronograma'); crPlantilla = p && Array.isArray(p.tareas) && p.tareas.length ? p.tareas : crBase(); } catch (err) { crPlantilla = crBase(); } }
+    try { crDoc = await a.leer('cronograma', isoDe(crSemana)); } catch (err) { crDoc = null; }
+    if (!crDoc || !Array.isArray(crDoc.tareas)) crDoc = { semana: isoDe(crSemana), tareas: crPlantilla.map(function (t) { return Object.assign({ estado: 'Pendiente', firma: '', obs: '' }, t); }), nuevo: true };
+  }
+  async function renderCronograma() {
+    if (!crSemana) crSemana = lunesDe(new Date());
+    const root = document.getElementById('am-root-am-cronograma');
+    root.innerHTML = cabecera('CRONOGRAMA LOGÍSTICA', 'Checklist operativo de preservicio, montaje y cierre · REVE01-22', false) + '<div class="am-vacio">Cargando…</div>';
+    await crCargar();
+    const edita = api() && api().puedeEditar() && !enVision();
+    const fin = new Date(crSemana); fin.setDate(fin.getDate() + 6);
+    const evs = Object.keys(appData.events).map(function (id) { return appData.events[id]; }).filter(function (e) { return e.fecha >= isoDe(crSemana) && e.fecha <= isoDe(fin); })
+      .sort(function (a, b) { return String(a.fecha + a.hora).localeCompare(String(b.fecha + b.hora)); });
+    const T = crDoc.tareas;
+    const n = { 'Realizada': 0, 'En proceso': 0, 'Pendiente': 0, 'Incidencia': 0 };
+    T.forEach(function (t) { n[t.estado] = (n[t.estado] || 0) + 1; });
+    const pct = T.length ? Math.round(n['Realizada'] / T.length * 1000) / 10 : 0;
+    let h = cabecera('CRONOGRAMA LOGÍSTICA', 'Checklist operativo de preservicio, montaje y cierre · REVE01-22', false);
+    h += '<div class="am-semana-nav"><button class="am-btn" onclick="amCrSemana(-1)">‹ Semana anterior</button><div class="am-semana-t">Semana del ' + crSemana.getDate() + ' de ' + MESES[crSemana.getMonth()] + ' al ' + fin.getDate() + ' de ' + MESES[fin.getMonth()] + '</div><button class="am-btn" onclick="amCrSemana(0)">Esta semana</button><button class="am-btn" onclick="amCrSemana(1)">Semana siguiente ›</button></div>';
+    h += '<div class="am-bloque am-cr-cab"><div><b>Eventos de la semana</b>' + (evs.length ? evs.map(function (e) { let t = { pax: 0, ninos: 0 }; try { t = calcularTotalesEvento(e.items || []); } catch (err) {} return '<div>' + esc(DIAS[(new Date(e.fecha + 'T12:00').getDay() + 6) % 7]) + ' ' + esc(fechaCorta(e.fecha)) + ' · ' + esc(e.hora || '--:--') + ' · <b>' + esc(e.boda) + '</b> · ' + esc(e.ubicacion) + ' · ' + (invitadosDe(e) || t.pax) + ' comensales</div>'; }).join('') : '<div class="am-suave">Sin bodas esta semana</div>') + '</div>' +
+      '<div class="am-cr-campos">' + [['salon', 'Salón'], ['resp_sala', 'Resp. sala'], ['encargado', 'Encargado logística']].map(function (c) { return '<label class="am-campo">' + c[1] + '<input value="' + esc(crDoc[c[0]]) + '" ' + (edita ? 'onchange="amCrCampo(\'' + c[0] + '\',this.value)"' : 'disabled') + '></label>'; }).join('') + '</div></div>';
+    h += '<div class="am-ctl-kpis"><div class="am-ctl-kpi ok"><span>% AVANCE</span><b>' + String(pct).split('.').join(',') + ' %</b><i style="width:' + pct + '%"></i></div><div class="am-ctl-kpi"><span>REALIZADAS</span><b>' + n['Realizada'] + ' de ' + T.length + '</b></div><div class="am-ctl-kpi"><span>EN PROCESO</span><b>' + n['En proceso'] + '</b></div><div class="am-ctl-kpi"><span>PENDIENTES</span><b>' + n['Pendiente'] + '</b></div><div class="am-ctl-kpi' + (n['Incidencia'] ? ' mal' : '') + '"><span>INCIDENCIAS</span><b>' + n['Incidencia'] + '</b></div></div>';
+    h += '<div class="am-fila"><select class="am-buscar" onchange="amCrFiltro(this.value)"><option value="">Todas las áreas</option>' + Object.keys(CR_AREAS).map(function (a) { return '<option' + (crFiltro === a ? ' selected' : '') + '>' + a + '</option>'; }).join('') + '<option value="__p"' + (crFiltro === '__p' ? ' selected' : '') + '>Solo pendientes</option></select>' +
+      (puedePlan() ? '<button class="am-btn" onclick="amCrPlantilla()">Editar tareas de la plantilla</button>' : '') + '<button class="inf-print-btn" onclick="amImprimir(this)"><i class="fa-solid fa-print mr-1"></i>IMPRIMIR / PDF</button></div>';
+    h += '<div class="am-bloque am-sinpad"><table class="am-tabla am-cr-tab"><thead><tr><th>ID</th><th>ÁREA</th><th>DÍA</th><th>TAREA</th><th>RESPONSABLE</th><th>PRIORIDAD</th><th>ESTADO</th><th>HORA / FIRMA</th><th>OBSERVACIONES / INCIDENCIAS</th></tr></thead><tbody>';
+    T.forEach(function (t, i) {
+      if (crFiltro === '__p' && t.estado === 'Realizada') return;
+      if (crFiltro && crFiltro !== '__p' && t.area !== crFiltro) return;
+      h += '<tr class="cr-' + esc(normNombre(t.estado).split(' ').join('-').toLowerCase()) + '"><td>' + esc(t.id) + '</td><td><span class="am-cr-area" style="background:' + (CR_AREAS[t.area] || '#999') + '">' + esc(t.area) + '</span></td><td><b>' + esc(t.dia) + '</b></td><td class="am-cr-t">' + esc(t.tarea) + '</td><td>' + esc(t.resp) + '</td>' +
+        '<td><span class="am-cr-prio' + (t.prio.indexOf('Alta') === 0 ? ' alta' : '') + '">' + esc(t.prio) + '</span></td>' +
+        '<td><select class="am-cr-est" ' + (edita ? 'onchange="amCrEstado(' + i + ',this.value)"' : 'disabled') + '>' + CR_ESTADOS.map(function (s2) { return '<option' + (t.estado === s2 ? ' selected' : '') + '>' + s2 + '</option>'; }).join('') + '</select></td>' +
+        '<td>' + esc(t.firma) + '</td><td><input class="am-ctl-in" value="' + esc(t.obs) + '" ' + (edita ? 'onchange="amCrObs(' + i + ',this.value)"' : 'disabled') + '></td></tr>';
+    });
+    h += '</tbody></table></div><div class="am-cr-firmas"><div>FIRMA ENCARGADO/A LOGÍSTICA</div><div>FIRMA RESPONSABLE DE EVENTOS / MAÎTRE</div></div>';
+    root.innerHTML = h;
+  }
+  async function crGuardar() {
+    const d = Object.assign({}, crDoc); delete d.nuevo;
+    try { await api().guardar('cronograma', isoDe(crSemana), d, true); crDoc.nuevo = false; } catch (err) { aviso('No se pudo guardar el cronograma: ' + (err.message || err), true); }
+  }
+  function iniciales() { const n = txt(api() ? api().nombre() : ''); return n ? n.split(' ').filter(function (x) { return x; }).map(function (x) { return x.charAt(0).toUpperCase() + '.'; }).join('') : ''; }
+  window.amCrSemana = function (d) { if (d === 0) crSemana = lunesDe(new Date()); else { crSemana = new Date(crSemana); crSemana.setDate(crSemana.getDate() + 7 * d); } renderCronograma(); };
+  window.amCrFiltro = function (v) { crFiltro = v; renderCronograma(); };
+  window.amCrCampo = function (k, v) { crDoc[k] = v; crGuardar(); };
+  window.amCrObs = function (i, v) { crDoc.tareas[i].obs = v; crGuardar(); };
+  window.amCrEstado = function (i, v) {
+    const t = crDoc.tareas[i]; t.estado = v;
+    if (v === 'Realizada') { const d = new Date(); t.firma = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + ' - ' + iniciales(); } else if (v === 'Pendiente') t.firma = '';
+    crGuardar().then(renderCronograma);
+  };
+  window.amCrPlantilla = function () {
+    let h = '<div class="am-modal-cab"><h2>Tareas de la plantilla</h2><button class="am-x" data-am-cerrar>✕</button></div><p class="am-suave">Se usan para las semanas nuevas. Las semanas ya empezadas no cambian. Deja la tarea vacía para quitarla.</p><div class="am-cr-pl">';
+    crPlantilla.concat([{ id: '', area: 'SALA', dia: '', tarea: '', resp: '', prio: 'Media' }]).forEach(function (t, i) {
+      h += '<div class="am-cr-pl-f" data-i="' + i + '"><select data-k="area">' + Object.keys(CR_AREAS).map(function (a) { return '<option' + (t.area === a ? ' selected' : '') + '>' + a + '</option>'; }).join('') + '</select>' +
+        '<input data-k="dia" value="' + esc(t.dia) + '" placeholder="Día"><input data-k="tarea" value="' + esc(t.tarea) + '" placeholder="Tarea nueva…"><input data-k="resp" value="' + esc(t.resp) + '" placeholder="Responsable">' +
+        '<select data-k="prio">' + CR_PRIO.map(function (p) { return '<option' + (t.prio.toLowerCase() === p.toLowerCase() ? ' selected' : '') + '>' + p + '</option>'; }).join('') + '</select></div>';
+    });
+    h += '</div><div class="am-fila am-fin"><button class="am-btn" onclick="amCrPlantillaBase()">Volver a la plantilla original</button><button class="am-btn am-prin" onclick="amCrPlantillaGuardar()">Guardar</button></div>';
+    modal(h);
+  };
+  window.amCrPlantillaBase = async function () { if (!confirm('¿Volver a las 35 tareas de la plantilla original?')) return; crPlantilla = crBase(); await api().guardar('config', 'cronograma', { tareas: crPlantilla }, true); cerrarModal(); aviso('Plantilla restaurada.'); };
+  window.amCrPlantillaGuardar = async function () {
+    const l = [];
+    document.querySelectorAll('.am-cr-pl-f').forEach(function (f) {
+      const t = {}; f.querySelectorAll('[data-k]').forEach(function (x) { t[x.getAttribute('data-k')] = txt(x.value); });
+      if (t.tarea) l.push(t);
+    });
+    l.forEach(function (t, i) { t.id = 'LOG-' + ('0' + (i + 1)).slice(-2); });
+    crPlantilla = l;
+    try { await api().guardar('config', 'cronograma', { tareas: l }, true); aviso('Plantilla guardada.'); } catch (err) { aviso('No se pudo guardar: ' + (err.message || err), true); }
+    cerrarModal();
+    if (crDoc && crDoc.nuevo) renderCronograma();
   };
 
   // ═════════ NUE-07 · Plano del cóctel ═════════
