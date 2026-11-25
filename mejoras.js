@@ -921,6 +921,19 @@
     if (!lienzo) return null;
     const c = sinControles(lienzo.cloneNode(true));
     const lab = c.querySelector('.absolute.top-4.left-4'); if (lab) lab.remove(); // rótulo «SALA / CARPA»
+    // Los cuadros de personal por zona salen del plano (tapaban mesas y platos) y van debajo como leyenda
+    let leyZonas = null;
+    const zcs = Array.prototype.slice.call(c.querySelectorAll('.zone-card'));
+    if (zcs.length) {
+      leyZonas = document.createElement('div');
+      leyZonas.className = 'am-mn-zonas';
+      zcs.forEach(function (z) {
+        const k = z.cloneNode(true);
+        k.style.position = 'static'; k.style.left = ''; k.style.top = ''; k.style.boxShadow = 'none';
+        const t = k.firstElementChild; k.setAttribute('data-zona', t ? txt(t.textContent).toUpperCase() : '');
+        leyZonas.appendChild(k); z.remove();
+      });
+    }
     c.style.width = '900px'; c.style.height = '600px';
     Array.prototype.forEach.call(c.children, function (capa) { capa.style.position = 'absolute'; capa.style.left = '0'; capa.style.top = '0'; capa.style.width = '900px'; capa.style.height = '600px'; });
     const ley = clonar('#plano-leyenda');
@@ -943,7 +956,7 @@
     if (x1 < x0) { x0 = 0; y0 = 0; x1 = 900; y1 = 600; }
     const m = 12; x0 = Math.max(0, x0 - m); y0 = Math.max(0, y0 - m); x1 = Math.min(900, x1 + m); y1 = Math.min(600, y1 + m);
     c.classList.remove('plan-grid'); c.style.border = '0'; c.style.borderRadius = '0';
-    return { nodo: c, x0: x0, y0: y0, w: x1 - x0, h: y1 - y0, ley: null, tot: tot, e: e };
+    return { nodo: c, x0: x0, y0: y0, w: x1 - x0, h: y1 - y0, ley: leyZonas, tot: tot, e: e };
   }
   function encajarPlano(cont, P, alto) {
     // cont: div de ancho fijo (px) donde cabe el plano; alto disponible (px)
@@ -1059,7 +1072,7 @@
       const del = [], tra = [];
       elegidos.forEach(function (p) {
         // Delante: plano
-        const a = tarjeta('frente'); del.push(a.t);
+        const a = tarjeta('frente'); a.t._p = p; del.push(a.t);
         a.i.innerHTML = '<div class="am-mn-cab"><b>' + esc(txt(p.cam.nombre).toUpperCase()) + '</b><span>' + esc(p.equipo) + '</span></div><div class="am-mn-plano"></div>' +
           '<div class="am-mn-pie"><span class="am-mn-pl p4">' + esc(P ? P.tot.p4 : '') + ' platos de 4</span><span class="am-mn-pl p3">' + esc(P ? P.tot.p3 : '') + ' de 3</span><span class="am-mn-pl p2">' + esc(P ? P.tot.p2 : '') + ' de 2</span>' +
           '<span class="am-mn-boda">' + esc(txt(e.boda)) + ' · ' + esc(fechaCorta(e.fecha)) + (e.hora ? ' · ' + esc(e.hora) : '') + '</span></div>';
@@ -1083,7 +1096,7 @@
         const zona = t.querySelector('.am-mn-plano'); if (!P) { zona.innerHTML = '<div class="am-vacio">Sin plano</div>'; return; }
         const alto = t.querySelector('.am-mn-in').clientHeight - t.querySelector('.am-mn-cab').offsetHeight - t.querySelector('.am-mn-pie').offsetHeight - (P.ley ? 0 : 0) - 6;
         encajarPlano(zona, P, alto * (P.ley ? 0.82 : 1));
-        if (P.ley) { const lz = document.createElement('div'); lz.className = 'am-mn-ley'; lz.style.height = (alto * 0.17) + 'px'; zona.appendChild(lz); apilar(lz, [{ nodo: P.ley.cloneNode(true), ancho: 900 }]); }
+        if (P.ley) { const lz = document.createElement('div'); lz.className = 'am-mn-ley'; lz.style.height = (alto * 0.17) + 'px'; zona.appendChild(lz); const ly = P.ley.cloneNode(true); const mz = txt(t._p && t._p.cam ? t._p.cam.zona : ''); if (mz) Array.prototype.forEach.call(ly.children, function (k) { if ((' ' + k.getAttribute('data-zona') + ' ').indexOf(' ' + mz + ' ') >= 0) k.classList.add('am-mn-zona-mia'); }); apilar(lz, [{ nodo: ly, ancho: 900 }]); }
       });
       tra.forEach(function (t) {
         const p = t._p, cuerpo = t.querySelector('.am-mn-cuerpo');
