@@ -1359,6 +1359,33 @@
     if (crDoc && crDoc.nuevo) renderCronograma();
   };
 
+  // ═════════ Plano: foto de fondo bajo la cuadrícula (plano de la finca, pilares…) ═════════
+  function pintarFondoPlano() {
+    const e = evActual(); const lz = document.getElementById('canvas-plano'); if (!e || !lz) return;
+    let capa = lz.querySelector('.am-plano-fondo');
+    if (e.plano_fondo) {
+      if (!capa) { capa = document.createElement('div'); capa.className = 'am-plano-fondo'; lz.insertBefore(capa, lz.firstChild); }
+      capa.style.backgroundImage = 'url(' + e.plano_fondo + ')';
+      capa.style.opacity = String(e.plano_fondo_op === undefined ? 0.55 : e.plano_fondo_op);
+    } else if (capa) capa.remove();
+    const panel = document.getElementById('plano-assets-panel');
+    if (panel && !panel.querySelector('.am-fondo-ctl')) panel.insertAdjacentHTML('beforeend', '<div class="am-fondo-ctl"></div>');
+    const ctl = panel ? panel.querySelector('.am-fondo-ctl') : null;
+    if (ctl) {
+      const op = Math.round((e.plano_fondo_op === undefined ? 0.55 : e.plano_fondo_op) * 100);
+      ctl.innerHTML = '<b>FOTO DE FONDO DEL PLANO</b><span class="am-suave">El plano de la finca o una foto de la sala, debajo de la cuadrícula.</span>' +
+        '<label class="am-btn">' + (e.plano_fondo ? 'Cambiar foto' : 'Subir foto') + '<input type="file" accept="image/*" class="am-oculto" onchange="amFondoPlano(this)"></label>' +
+        (e.plano_fondo ? '<label>Transparencia <input type="range" min="10" max="100" value="' + op + '" oninput="amFondoOp(this.value)"></label><button class="am-btn am-peligro" onclick="amFondoQuitar()">Quitar foto</button>' : '');
+    }
+  }
+  envolver('renderCanvas', null, pintarFondoPlano);
+  window.amFondoPlano = async function (inp) {
+    const f = inp.files && inp.files[0]; if (!f) return;
+    try { const e = evActual(); e.plano_fondo = await reducirImagen(f, 1400); guardarEv(); pintarFondoPlano(); } catch (err) { aviso('No se ha podido cargar la imagen.', true); }
+  };
+  window.amFondoOp = function (v) { const e = evActual(); e.plano_fondo_op = Math.max(0.1, Math.min(1, num(v) / 100)); const c = document.querySelector('#canvas-plano .am-plano-fondo'); if (c) c.style.opacity = String(e.plano_fondo_op); guardarEv(); };
+  window.amFondoQuitar = function () { const e = evActual(); delete e.plano_fondo; delete e.plano_fondo_op; guardarEv(); pintarFondoPlano(); };
+
   // ═════════ NUE-07 · Plano del cóctel ═════════
   const PC_TIPOS = [
     ['JAMÓN', '#8C3B4E', 120, 50], ['ANDALUZA', '#B5651D', 120, 50], ['QUESOS', '#C48A1E', 120, 50], ['BARRA', '#3F5A2E', 180, 45],
