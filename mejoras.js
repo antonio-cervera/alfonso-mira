@@ -87,6 +87,7 @@
     'am-papelera': { titulo: 'PAPELERA', nivel: 'top', render: function () { renderPapelera(); } },
     'am-ceremonia': { titulo: 'CEREMONIA', nivel: 'jsw', render: function () { renderCeremonia(); } },
     'am-finca': { titulo: 'FICHA DE LA FINCA', nivel: 'jsw', render: function () { renderFinca(); } },
+    'am-minutas': { titulo: 'MINUTAS PARA IMPRIMIR', nivel: 'jsw', render: function () { renderMinutas(); } },
     'am-planococtel': { titulo: 'PLANO CÓCTEL', nivel: 'coord', render: function () { renderPlanoCoctel(); } }
   };
   function crearMenu() {
@@ -102,6 +103,8 @@
     if (prot && !document.getElementById('tab-am-ceremonia')) prot.insertAdjacentHTML('afterend', '<button onclick="switchTab(\'am-ceremonia\')" id="tab-am-ceremonia" class="' + sub + '">CEREMONIA</button>');
     const ficha = document.getElementById('tab-jsw-fichainfo');
     if (ficha && !document.getElementById('tab-am-finca')) ficha.insertAdjacentHTML('afterend', '<button onclick="switchTab(\'am-finca\')" id="tab-am-finca" class="' + sub + '">FICHA DE LA FINCA</button>');
+    const mcam = document.getElementById('tab-jsw-minutacamareros');
+    if (mcam && !document.getElementById('tab-am-minutas')) mcam.insertAdjacentHTML('afterend', '<button onclick="switchTab(\'am-minutas\')" id="tab-am-minutas" class="' + sub + '"><i class="fa-solid fa-print mr-1"></i>MINUTAS PARA IMPRIMIR</button>');
     const plano = document.getElementById('tab-plano');
     if (plano && !document.getElementById('tab-am-planococtel')) plano.insertAdjacentHTML('afterend', '<button onclick="switchTab(\'am-planococtel\')" id="tab-am-planococtel" class="' + sub + '">PLANO CÓCTEL</button>');
     const main = document.querySelector('main');
@@ -872,6 +875,251 @@
     renderPlanning();
   };
   window.amSemana = function (d) { if (d === 0) semana = lunesDe(new Date()); else { semana = new Date(semana); semana.setDate(semana.getDate() + 7 * d); } renderPlanning(); };
+
+  // ═════════ Minutas para imprimir (4 por A4, recortables) ═════════
+  // Personal: delante el plano de la boda; detrás su cuadro de tareas, la minuta de camareros y los menús especiales.
+  // Minuta de la boda y minutas especiales: con el logo oficial, tantas copias como mesas o personas.
+  let mnModo = 'personal', mnDoble = true, mnSel = null, mnCopias = {};
+  const MN_W = 105, MN_H = 148.5; // mm
+  function mmPx(mm) { return mm * 96 / 25.4; }
+  function sinControles(nodo) {
+    nodo.querySelectorAll('select').forEach(function (sel) {
+      const o = sel.options[sel.selectedIndex];
+      const sp = document.createElement('span'); sp.className = 'am-mn-val'; sp.textContent = o ? o.text : '';
+      sel.parentNode.replaceChild(sp, sel);
+    });
+    nodo.querySelectorAll('input, textarea').forEach(function (i) {
+      const sp = document.createElement('span'); sp.className = 'am-mn-val'; sp.textContent = i.type === 'checkbox' ? (i.checked ? '☑' : '☐') : i.value;
+      i.parentNode.replaceChild(sp, i);
+    });
+    nodo.querySelectorAll('button, .delete-btn, .ctrl-handle, .no-print, .am-btn').forEach(function (b) { b.remove(); });
+    nodo.querySelectorAll('[id]').forEach(function (x) { x.removeAttribute('id'); });
+    nodo.removeAttribute('id');
+    return nodo;
+  }
+  function clonar(sel) { const n = document.querySelector(sel); return n ? sinControles(n.cloneNode(true)) : null; }
+  function textoFecha(iso) {
+    const p = String(iso || '').split('-'); if (p.length !== 3) return txt(iso);
+    return parseInt(p[2], 10) + ' de ' + MESES[parseInt(p[1], 10) - 1] + ' de ' + p[0];
+  }
+  // Recorta el plano a lo que ocupan las mesas y decide si se gira para aprovechar la tarjeta
+  function planoRecortado() {
+    const e = evActual();
+    let prev = 'principal';
+    try { prev = currentPlanoMode; switchPlanoMode('camareros'); renderCanvas(); } catch (err) {}
+    const lienzo = document.getElementById('canvas-plano');
+    if (!lienzo) return null;
+    const c = sinControles(lienzo.cloneNode(true));
+    const lab = c.querySelector('.absolute.top-4.left-4'); if (lab) lab.remove(); // rótulo «SALA / CARPA»
+    c.style.width = '900px'; c.style.height = '600px';
+    Array.prototype.forEach.call(c.children, function (capa) { capa.style.position = 'absolute'; capa.style.left = '0'; capa.style.top = '0'; capa.style.width = '900px'; capa.style.height = '600px'; });
+    const ley = clonar('#plano-leyenda');
+    const tot = {};
+    ['p4', 'p3', 'p2'].forEach(function (k) { const b = document.getElementById('tot-' + k + '-badge'); tot[k] = b ? txt(b.textContent) : ''; });
+    try { switchPlanoMode(prev); renderCanvas(); } catch (err) {}
+    // medir fuera de pantalla
+    const caja = document.createElement('div');
+    caja.style.cssText = 'position:fixed;left:-20000px;top:0;width:900px;height:600px;';
+    c.style.position = 'relative'; c.style.margin = '0'; c.style.boxShadow = 'none';
+    caja.appendChild(c); document.body.appendChild(caja);
+    const base = c.getBoundingClientRect();
+    let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+    c.querySelectorAll('*').forEach(function (el) {
+      const r = el.getBoundingClientRect(); if (!r.width && !r.height) return;
+      if (r.width > 880 && r.height > 580) return; // capas a tamaño completo
+      x0 = Math.min(x0, r.left - base.left); y0 = Math.min(y0, r.top - base.top); x1 = Math.max(x1, r.right - base.left); y1 = Math.max(y1, r.bottom - base.top);
+    });
+    caja.remove();
+    if (x1 < x0) { x0 = 0; y0 = 0; x1 = 900; y1 = 600; }
+    const m = 12; x0 = Math.max(0, x0 - m); y0 = Math.max(0, y0 - m); x1 = Math.min(900, x1 + m); y1 = Math.min(600, y1 + m);
+    c.classList.remove('plan-grid'); c.style.border = '0'; c.style.borderRadius = '0';
+    return { nodo: c, x0: x0, y0: y0, w: x1 - x0, h: y1 - y0, ley: null, tot: tot, e: e };
+  }
+  function encajarPlano(cont, P, alto) {
+    // cont: div de ancho fijo (px) donde cabe el plano; alto disponible (px)
+    const W = cont.clientWidth, H = alto;
+    const sN = Math.min(W / P.w, H / P.h), sR = Math.min(W / P.h, H / P.w);
+    const girar = sR > sN * 1.12;
+    const s = girar ? sR : sN;
+    const vis = document.createElement('div');
+    const vw = (girar ? P.h : P.w) * s, vh = (girar ? P.w : P.h) * s;
+    vis.style.cssText = 'position:relative;overflow:hidden;margin:0 auto;width:' + vw + 'px;height:' + vh + 'px;';
+    const n = P.nodo.cloneNode(true);
+    n.style.position = 'absolute'; n.style.left = '0'; n.style.top = '0'; n.style.transformOrigin = '0 0';
+    n.style.transform = girar
+      ? 'translate(' + (P.h * s) + 'px,0) rotate(90deg) scale(' + s + ') translate(' + (-P.x0) + 'px,' + (-P.y0) + 'px)'
+      : 'scale(' + s + ') translate(' + (-P.x0) + 'px,' + (-P.y0) + 'px)';
+    vis.appendChild(n); cont.appendChild(vis);
+  }
+  // Bloques apilados que se reducen para caber en la tarjeta
+  function apilar(destino, bloques) {
+    // Los bloques «fijo» mantienen su escala (ancho completo); el resto se reduce para caber en el hueco que queda
+    const W = destino.clientWidth, H = destino.clientHeight;
+    const cajas = bloques.filter(function (b) { return b; }).map(function (b) {
+      const cj = document.createElement('div'); cj.className = 'am-mn-bloque';
+      const inn = document.createElement('div'); inn.style.width = (b.ancho || W) + 'px'; inn.style.transformOrigin = '0 0';
+      inn.appendChild(b.nodo); cj.appendChild(inn); destino.appendChild(cj);
+      return { cj: cj, inn: inn, w: b.ancho || W, fijo: !!b.fijo, llenar: !!b.llenar, max: b.max || 1.6, s: Math.min(b.max || 1.6, W / (b.ancho || W)) };
+    });
+    cajas.forEach(function (c) { if (c.llenar) { c.inn.style.width = c.w + 'px'; const hh = c.inn.scrollHeight; c.s = Math.min(c.max, W / c.w, (H - 6) / hh); } });
+    let fijo = 0, flex = 0;
+    cajas.forEach(function (c) { c.h = c.inn.scrollHeight; if (c.fijo) fijo += c.h * c.s; else flex += c.h * c.s; });
+    const gap = cajas.length * 4;
+    let fF = 1, fX = 1;
+    if (fijo + flex + gap > H) {
+      if (fijo + gap < H * 0.7 && flex > 0) fX = Math.max(0.2, (H - fijo - gap) / flex);
+      else { fF = fX = (H - gap) / (fijo + flex); }
+    }
+    cajas.forEach(function (c) {
+      const s = c.s * (c.fijo ? fF : fX);
+      c.inn.style.transform = 'scale(' + s + ')'; c.cj.style.height = Math.ceil(c.h * s) + 'px'; c.cj.style.width = W + 'px';
+      if (s * c.w < W) c.inn.style.marginLeft = ((W - s * c.w) / 2) + 'px';
+    });
+  }
+  function tarjeta(clase) {
+    const t = document.createElement('div'); t.className = 'am-mn' + (clase ? ' ' + clase : '');
+    const i = document.createElement('div'); i.className = 'am-mn-in'; t.appendChild(i);
+    return { t: t, i: i };
+  }
+  function hoja(hojas, tarjetas) {
+    for (let k = 0; k < tarjetas.length; k += 4) {
+      const h = document.createElement('div'); h.className = 'am-hoja';
+      tarjetas.slice(k, k + 4).forEach(function (t) { h.appendChild(t || tarjeta('vacia').t); });
+      hojas.appendChild(h);
+    }
+  }
+  function especialesNota(e) {
+    let cajas = []; try { cajas = meBoxes(e); } catch (err) {}
+    if (!cajas.length) return null;
+    const d = document.createElement('div'); d.className = 'am-mn-esp';
+    d.innerHTML = '<b>MENÚS ESPECIALES:</b> ' + cajas.map(function (b) {
+      return '<span style="border-left:4px solid ' + b.color + ';padding-left:3px;">' + esc(b.tipo || 'ESPECIAL') + ' (' + esc(b.menu) + '): ' +
+        b.personas.map(function (x) { return esc(x.nombre) + (x.mesa ? ' M' + esc(x.mesa) : ''); }).join(', ') + '</span>';
+    }).join(' · ');
+    return d;
+  }
+  function personasMinuta(e) {
+    const vistos = {}, out = [];
+    let lista = []; try { lista = tsCamareros(e); } catch (err) {}
+    lista.forEach(function (x, i) { vistos[x.cam.id] = 1; out.push({ cam: x.cam, idx: i, equipo: x.equipo }); });
+    (e.camareros || []).forEach(function (c) { if (txt(c.nombre) && !vistos[c.id]) out.push({ cam: c, idx: -1, equipo: txt(c.equipo) || txt(c.responsabilidad) }); });
+    return out;
+  }
+  function renderMinutas() {
+    const root = document.getElementById('am-root-am-minutas');
+    const e = evActual(); if (!e) return;
+    const pers = personasMinuta(e);
+    if (!mnSel || mnSel._ev !== currentEventId) { mnSel = { _ev: currentEventId }; pers.forEach(function (p) { mnSel[p.cam.id] = true; }); mnCopias = {}; }
+    let esp = []; try { esp = getMinutasEspeciales(e); } catch (err) {}
+    const mesas = (e.items || []).filter(function (i) { return i.entity === 'mesa'; }).length;
+    if (mnCopias.boda === undefined) mnCopias.boda = mesas || 10;
+    let h = cabecera('MINUTAS PARA IMPRIMIR', undefined, false);
+    h += '<div class="am-mn-modos">' + [['personal', 'Personal: plano + tareas'], ['boda', 'Minuta de la boda'], ['especiales', 'Minutas especiales']].map(function (m) {
+      return '<button class="am-btn' + (mnModo === m[0] ? ' am-prin' : '') + '" onclick="amMnModo(\'' + m[0] + '\')">' + m[1] + '</button>'; }).join('') +
+      '<button class="am-btn am-prin am-mn-imp" onclick="amMnImprimir()"><i class="fa-solid fa-print mr-1"></i>IMPRIMIR</button></div>';
+    h += '<div class="am-bloque am-mn-opc">';
+    if (mnModo === 'personal') {
+      h += '<p class="am-suave">Una minuta por persona del LISTADO DE PERSONAL: <b>delante el plano</b> de la boda y <b>detrás su cuadro de tareas</b>, la minuta de camareros y los menús especiales. 4 minutas por A4.</p>' +
+        '<label class="am-mn-chk"><input type="checkbox"' + (mnDoble ? ' checked' : '') + ' onchange="amMnDoble(this.checked)"> Doble cara (en la impresora: «Imprimir en ambas caras · borde largo»)</label>' +
+        '<div class="am-mn-pers">' + pers.map(function (p) { return '<label><input type="checkbox"' + (mnSel[p.cam.id] ? ' checked' : '') + ' onchange="amMnPers(' + esc(JSON.stringify(p.cam.id)) + ',this.checked)"> ' + esc(txt(p.cam.nombre).toUpperCase()) + ' <small>' + esc(p.equipo) + '</small></label>'; }).join('') + '</div>';
+    } else if (mnModo === 'boda') {
+      h += '<p class="am-suave">La minuta de la boda con el logo, 4 por A4. Por defecto, una por mesa del plano.</p><label class="am-campo am-mn-num">Copias<input type="number" min="1" value="' + mnCopias.boda + '" onchange="amMnCopias(\'boda\',this.value)"></label>';
+    } else {
+      h += esp.length ? '<p class="am-suave">Una minuta por persona de cada menú especial, 4 por A4.</p><div class="am-mn-pers">' + esp.map(function (m, i) {
+        const def = Math.max(1, (m.personas || []).length); if (mnCopias['e' + i] === undefined) mnCopias['e' + i] = def;
+        return '<label class="am-campo am-mn-num" style="border-left:5px solid ' + m.color + ';padding-left:6px;">' + esc(m.titulo || 'Menú especial') + '<input type="number" min="0" value="' + mnCopias['e' + i] + '" onchange="amMnCopias(\'e' + i + '\',this.value)"></label>'; }).join('') + '</div>'
+        : '<p class="am-suave">No hay menús especiales en Protocolo.</p>';
+    }
+    h += '</div><div class="am-mn-prev"><div id="am-hojas"></div></div>';
+    root.innerHTML = h;
+    setTimeout(function () { componer(e, pers, esp); }, 30);
+  }
+  function componer(e, pers, esp) {
+    const hojas = document.getElementById('am-hojas'); if (!hojas) return;
+    hojas.innerHTML = '';
+    const caras = [];
+    if (mnModo === 'personal') {
+      const P = planoRecortado();
+      let fichas = [];
+      try { renderTareasServicio(); fichas = Array.prototype.slice.call(document.querySelectorAll('#jsw-root-tareas .ts-card')); } catch (err) {}
+      let mc = null;
+      try { const pv = currentMinutaCamarerosTab; currentMinutaCamarerosTab = 'principal'; renderMinutaCamareros(); mc = clonar('#mc-paper-content'); currentMinutaCamarerosTab = pv; } catch (err) {}
+      if (mc && mc.firstElementChild && mc.firstElementChild.querySelector('h1, img')) mc.firstElementChild.remove();
+      const elegidos = pers.filter(function (p) { return mnSel[p.cam.id]; });
+      const del = [], tra = [];
+      elegidos.forEach(function (p) {
+        // Delante: plano
+        const a = tarjeta('frente'); del.push(a.t);
+        a.i.innerHTML = '<div class="am-mn-cab"><b>' + esc(txt(p.cam.nombre).toUpperCase()) + '</b><span>' + esc(p.equipo) + '</span></div><div class="am-mn-plano"></div>' +
+          '<div class="am-mn-pie"><span class="am-mn-pl p4">' + esc(P ? P.tot.p4 : '') + ' platos de 4</span><span class="am-mn-pl p3">' + esc(P ? P.tot.p3 : '') + ' de 3</span><span class="am-mn-pl p2">' + esc(P ? P.tot.p2 : '') + ' de 2</span>' +
+          '<span class="am-mn-boda">' + esc(txt(e.boda)) + ' · ' + esc(fechaCorta(e.fecha)) + (e.hora ? ' · ' + esc(e.hora) : '') + '</span></div>';
+        // Detrás: tareas + minuta + especiales
+        const b = tarjeta('dorso'); tra.push(b.t);
+        b.i.innerHTML = '<div class="am-mn-cab"><b>' + esc(txt(p.cam.nombre).toUpperCase()) + '</b><span>' + esc(txt(e.boda)) + ' · ' + esc(fechaCorta(e.fecha)) + '</span></div><div class="am-mn-cuerpo"></div>';
+        b.t._p = p;
+
+      });
+      // colocar en el DOM para poder medir
+      hoja(hojas, del.slice());
+      if (mnDoble) {
+        const espejo = [];
+        for (let k = 0; k < tra.length; k += 4) { const g = tra.slice(k, k + 4); while (g.length < 4) g.push(null); espejo.push(g[1], g[0], g[3], g[2]); }
+        hoja(hojas, espejo);
+        // reordenar: frente1, dorso1, frente2, dorso2…
+        const hs = Array.prototype.slice.call(hojas.children), n = hs.length / 2;
+        hojas.innerHTML = ''; for (let k = 0; k < n; k++) { hojas.appendChild(hs[k]); hs[k].classList.add('cara-a'); hojas.appendChild(hs[k + n]); hs[k + n].classList.add('cara-b'); }
+      } else hoja(hojas, tra);
+      del.forEach(function (t) {
+        const zona = t.querySelector('.am-mn-plano'); if (!P) { zona.innerHTML = '<div class="am-vacio">Sin plano</div>'; return; }
+        const alto = t.querySelector('.am-mn-in').clientHeight - t.querySelector('.am-mn-cab').offsetHeight - t.querySelector('.am-mn-pie').offsetHeight - (P.ley ? 0 : 0) - 6;
+        encajarPlano(zona, P, alto * (P.ley ? 0.82 : 1));
+        if (P.ley) { const lz = document.createElement('div'); lz.className = 'am-mn-ley'; lz.style.height = (alto * 0.17) + 'px'; zona.appendChild(lz); apilar(lz, [{ nodo: P.ley.cloneNode(true), ancho: 900 }]); }
+      });
+      tra.forEach(function (t) {
+        const p = t._p, cuerpo = t.querySelector('.am-mn-cuerpo');
+        cuerpo.style.height = (t.querySelector('.am-mn-in').clientHeight - t.querySelector('.am-mn-cab').offsetHeight - 4) + 'px';
+        const f = p.idx >= 0 && fichas[p.idx] ? sinControles(fichas[p.idx].cloneNode(true)) : null;
+        const minuta = mc ? mc.cloneNode(true) : null; if (minuta) minuta.classList.add('am-mn-compacto');
+        apilar(cuerpo, [f ? { nodo: f, ancho: 760, fijo: true } : null, minuta ? { nodo: minuta, ancho: 380, max: 1.25 } : null, { nodo: especialesNota(e) || document.createElement('div'), ancho: 380, max: 1.25 }]);
+      });
+    } else if (mnModo === 'boda') {
+      let mb = null;
+      try { const pv = currentMinutaTab; currentMinutaTab = 'principal'; renderMinutaPreview(); mb = clonar('#minuta-paper-content'); currentMinutaTab = pv; renderMinutaPreview(); } catch (err) {}
+      const n = Math.max(1, parseInt(mnCopias.boda, 10) || 1), l = [];
+      for (let k = 0; k < n; k++) { const a = tarjeta('minuta'); a.t._n = mb; l.push(a.t); }
+      hoja(hojas, l);
+      l.forEach(function (t) { if (t._n) apilar(t.querySelector('.am-mn-in'), [{ nodo: t._n.cloneNode(true), ancho: 330, llenar: true, max: 1.4 }]); });
+    } else {
+      const l = [];
+      esp.forEach(function (m, i) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = minutaCuerpoHtml(e, m.data, (e.minuta_logo && e.minuta_logo.especiales) || null, { titulo: m.titulo, color: m.color, personas: m.personas });
+        const n = Math.max(0, parseInt(mnCopias['e' + i], 10) || 0);
+        for (let k = 0; k < n; k++) { const a = tarjeta('minuta'); a.t.style.borderTop = '5px solid ' + m.color; a.t._n = tmp; l.push(a.t); }
+      });
+      hoja(hojas, l);
+      l.forEach(function (t) { apilar(t.querySelector('.am-mn-in'), [{ nodo: t._n.cloneNode(true), ancho: 330, llenar: true, max: 1.4 }]); });
+    }
+    if (!hojas.children.length) hojas.innerHTML = '<div class="am-vacio">Nada que imprimir.</div>';
+  }
+  window.amMnModo = function (m) { mnModo = m; renderMinutas(); };
+  window.amMnDoble = function (v) { mnDoble = !!v; renderMinutas(); };
+  window.amMnPers = function (id, v) { mnSel[id] = !!v; renderMinutas(); };
+  window.amMnCopias = function (k, v) { mnCopias[k] = Math.max(0, parseInt(v, 10) || 0); renderMinutas(); };
+  window.amMnImprimir = function () {
+    const hojas = document.getElementById('am-hojas'); if (!hojas || !hojas.querySelector('.am-hoja')) return;
+    const vuelta = hojas.parentNode;
+    const st = document.createElement('style'); st.id = 'am-page-mn';
+    st.textContent = '@media print { @page { size: A4 portrait; margin: 0; } }';
+    document.head.appendChild(st);
+    document.body.appendChild(hojas); document.body.classList.add('am-hojas-modo');
+    const fin = function () {
+      document.body.classList.remove('am-hojas-modo'); vuelta.appendChild(hojas); st.remove();
+      window.removeEventListener('afterprint', fin);
+    };
+    window.addEventListener('afterprint', fin);
+    window.print();
+  };
 
   // ═════════ NUE-07 · Plano del cóctel ═════════
   const PC_TIPOS = [

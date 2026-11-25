@@ -5,6 +5,11 @@
     <title>Alfonso Mira · Planning</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#1F1B16">
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16.png">
+    <link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+    <link rel="manifest" href="site.webmanifest">
     <script>
         // Diagnóstico: si algo falla, se muestra el mensaje en pantalla (sin necesidad de abrir la consola).
         (function () {
@@ -448,12 +453,12 @@
         @media print { body * { visibility:hidden !important; } #seating-a4-sheet,#seating-a4-sheet * { visibility:visible !important; } #seating-a4-sheet { position:absolute;left:0;top:0;width:210mm;min-height:297mm;box-shadow:none;border:none; } }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="tema-colores.css?v=1795592477">
-    <link rel="stylesheet" href="tema.css?v=1795592477">
+    <link rel="stylesheet" href="tema-colores.css?v=1795594079">
+    <link rel="stylesheet" href="tema.css?v=1795594079">
 </head>
 <body class="h-screen w-screen flex flex-row">
-    <script src="firebase-config.js?v=1795592477"></script>
-    <script src="puente.js?v=1795592477"></script>
+    <script src="firebase-config.js?v=1795594079"></script>
+    <script src="puente.js?v=1795594079"></script>
 
     <!-- DATALISTS PARA MATERIALES -->
     <datalist id="dl-manteleria-art"><option value="MANTELES CASA"></option><option value="MANTELES ALQUILER"></option><option value="CUBREMANTEL CASA"></option><option value="CUBREMANTEL ALQUILER"></option><option value="SERVILLETAS CASA"></option><option value="SERVILLETAS ALQUILER"></option><option value="LITOS"></option></datalist>
@@ -474,6 +479,7 @@
                 <p class="text-[9px] text-amber-300 font-extrabold tracking-[0.22em] uppercase mt-1">Eventos & Celebraciones</p>
                 <p class="text-[9px] text-slate-300 tracking-wider mt-0.5">PLANNING PROFESIONAL</p>
             </div>
+            <img src="img/logo-am-marfil.png" alt="Alfonso Mira" class="am-logo-lateral">
         </div>
         <nav class="flex flex-col p-3 space-y-2 flex-1 overflow-y-auto custom-scrollbar">
             <button onclick="switchTab('calendar')" id="tab-calendar" class="nav-btn nav-active"><i class="fa-solid fa-calendar-days w-6 text-center mr-2"></i> CALENDARIO</button>
@@ -4968,7 +4974,7 @@
             let html = '<div class="mb-5 flex flex-col items-center justify-center">';
             if (logo) html += `<img src="${logo}" class="h-16 object-contain mx-auto" alt="Logo Minuta" />`;
             else if (o.simple) html += '<h1 class="text-[24px] font-normal tracking-[0.2em] text-[#2C4120] uppercase" style="font-family:Times New Roman,Times,serif">Alfonso Mira</h1>';
-            else html += `<div class="flex flex-col items-center justify-center w-full">
+            else html += `<img src="img/logo-am.png" class="am-logo-minuta" alt="Alfonso Mira"><div class="hidden">
                         <h1 class="text-[24px] font-normal tracking-[0.2em] text-[#2C4120] uppercase" style="font-family: 'Times New Roman', Times, serif;">Alfonso Mira</h1>
                         <div class="mt-1 flex justify-center items-center w-full opacity-60">
                             <div class="h-[1px] bg-gray-500 w-16"></div>
@@ -7029,16 +7035,16 @@
             pzImprimirBloques(bloques);
         }
     </script>
-    <script src="ficha_campos.js?v=1795592477"></script>
-    <script src="mejoras.js?v=1795592477"></script>
+    <script src="ficha_campos.js?v=1795594079"></script>
+    <script src="mejoras.js?v=1795594079"></script>
     <!-- Acceso (Firebase) -->
     <div id="nb-capa" class="nb-capa">
         <div id="nb-carga" class="nb-tarjeta">
-            <div class="nb-marca">Alfonso Mira</div>
+            <div class="nb-marca"><img src="img/logo-am.png" alt="Alfonso Mira" class="nb-logo"></div>
             <div class="nb-suave">Cargando…</div>
         </div>
         <div id="nb-login" class="nb-tarjeta nb-oculto">
-            <div class="nb-marca">Alfonso Mira</div>
+            <div class="nb-marca"><img src="img/logo-am.png" alt="Alfonso Mira" class="nb-logo"></div>
             <div class="nb-suave">Eventos &amp; Celebraciones · Planning</div>
             <button id="nb-google" class="nb-btn nb-prin nb-ancho">Entrar con Google</button>
             <div class="nb-sep"><span>o con correo</span></div>
@@ -7049,7 +7055,7 @@
             <p id="nb-login-msg" class="nb-msg"></p>
         </div>
         <div id="nb-pendiente" class="nb-tarjeta nb-oculto">
-            <div class="nb-marca">Alfonso Mira</div>
+            <div class="nb-marca"><img src="img/logo-am.png" alt="Alfonso Mira" class="nb-logo"></div>
             <p>Tu acceso está <b>pendiente de aprobación</b>.</p>
             <p class="nb-suave">Avisa al administrador para que te asigne un rol. Esta pantalla se actualizará sola.</p>
             <p class="nb-suave" id="nb-pend-email"></p>
@@ -7058,6 +7064,6 @@
     </div>
     <div id="nb-modal" class="nb-modal nb-oculto"><div id="nb-modal-caja" class="nb-modal-caja"></div></div>
 
-    <script type="module" src="nube.js?v=1795592477"></script>
+    <script type="module" src="nube.js?v=1795594079"></script>
 </body>
 </html>
