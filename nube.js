@@ -10,7 +10,7 @@ import {
 import {
   initializeFirestore, persistentLocalCache, persistentMultipleTabManager,
   doc, getDoc, getDocs, setDoc, updateDoc, deleteDoc, addDoc, collection, onSnapshot, writeBatch,
-  serverTimestamp, deleteField, FieldPath, query, where, getDocsFromCache, Timestamp
+  serverTimestamp, deleteField, FieldPath, query, where, getDocsFromCache, getDocFromCache, Timestamp
 } from 'https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js';
 
 const app = initializeApp(window.FIREBASE_CONFIG);
@@ -148,6 +148,11 @@ function recordar(id, d) {
   guardado[id] = d && d.datos ? m : null;
 }
 
+// Sin conexión se lee la copia del dispositivo al momento (getDoc esperaría a que la red falle)
+async function leerDoc(ref) {
+  if (!navigator.onLine) { try { return await getDocFromCache(ref); } catch (e) {} }
+  return getDoc(ref);
+}
 // ───────── Funciones que antes estaban en Apps Script ─────────
 window.__backend = {
   loadData: async function () {
@@ -160,6 +165,15 @@ window.__backend = {
     let previo = null;
     try { previo = JSON.parse(localStorage.getItem(clave) || 'null'); } catch (e) { previo = null; }
     let docs = null;
+    // Sin conexión: directamente las bodas guardadas en el dispositivo (sin esperar a que la red falle)
+    if (!navigator.onLine) {
+      try { const enCache = await getDocsFromCache(col); if (enCache.size > 0) { docs = []; enCache.forEach(function (x) { docs.push(x); }); } } catch (e) { docs = null; }
+      if (docs) {
+        const events = {}, revs = {};
+        docs.forEach(function (s) { const d = s.data(); if (d.papelera) return; const ev = montar(d); if (!esSuya(ev)) return; events[s.id] = ev; revs[s.id] = d.rev || ''; recordar(s.id, d); });
+        return JSON.stringify({ events: events, revs: revs, corruptos: [] });
+      }
+    }
     if (previo && previo.dia === hoy && previo.t) {
       try {
         const enCache = await getDocsFromCache(col);
@@ -187,14 +201,14 @@ window.__backend = {
     return JSON.stringify({ events: events, revs: revs, corruptos: [] });
   },
   loadEvent: async function (id) {
-    const s = await getDoc(doc(db, 'eventos', id));
+    const s = await leerDoc(doc(db, 'eventos', id));
     if (!s.exists() || s.data().papelera) return { ok: true, json: null, rev: 'DELETED' };
     const d = s.data();
     recordar(id, d);
     return { ok: true, json: JSON.stringify(montar(d)), rev: d.rev || '' };
   },
   getEventRev: async function (id) {
-    const s = await getDoc(doc(db, 'eventos', id));
+    const s = await leerDoc(doc(db, 'eventos', id));
     return { ok: true, rev: s.exists() ? (s.data().rev || '') : '' };
   },
   saveEvent: async function (id, json, opciones) {
