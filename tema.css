@@ -436,3 +436,13 @@ body.rol-sinplan #subtab-consumos-control { display: none !important; }
 body.rol-coordinador div:has(> #menu-camareros), body.rol-cocina div:has(> #menu-camareros), body.rol-camarero div:has(> #menu-camareros) { display: none !important; }
 body.rol-admin .am-solo-equipo, body.rol-gestor .am-solo-equipo { display: none !important; }
 .am-aviso-copia::after { content: '!'; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; margin-left: 8px; border-radius: 99px; background: #C48A1E; color: #fff; font-size: 11px; font-weight: 900; }
+
+.am-chip-usuario{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:#E6EBD9;color:#4B5A2A;font-size:10px;font-weight:600;letter-spacing:.02em;vertical-align:middle}
+
+.am-combo{position:fixed;z-index:9999;display:none;overflow-y:auto;background:#FFFDF8;border:1px solid #D9D2C3;border-radius:10px;box-shadow:0 12px 32px rgba(31,27,22,.18);padding:4px;font-size:13px}
+.am-combo-op{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 10px;border-radius:7px;cursor:pointer;color:#1F1B16;font-weight:600}
+.am-combo-op:hover,.am-combo-sel{background:#E6EBD9}
+.am-combo-op em{font-style:normal;font-size:10px;font-weight:700;letter-spacing:.04em;color:#4B5A2A;background:#EEF1E4;border-radius:999px;padding:1px 8px}
+.am-combo-u{color:#6B7B3A;font-size:11px;margin-left:4px}
+.am-combo-vacio{padding:9px 10px;color:#7A7266;font-size:12px}
+#view-camareros-listado input[data-am-combo]{min-width:190px}

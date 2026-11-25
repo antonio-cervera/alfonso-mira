@@ -1821,6 +1821,7 @@
 
   // ═════════ NUE-10 · Directorio único de personal ═════════
   let DIR = [];
+  let dirSincronizado = false;
   async function cargarDirectorio() { try { DIR = await api().listar('personal'); } catch (e) { DIR = []; } pintarDatalist(); }
   function pintarDatalist() {
     let dl = document.getElementById('am-dl-personal');
@@ -1851,9 +1852,75 @@
   }
   envolver('renderCamarerosView', null, function () {
     document.querySelectorAll('#view-camareros-listado input[onblur^="updateCamarero("]').forEach(function (i) {
-      if ((i.getAttribute('onblur') || '').indexOf("'nombre'") > 0) i.setAttribute('list', 'am-dl-personal');
+      if ((i.getAttribute('onblur') || '').indexOf("'nombre'") > 0) { i.setAttribute('data-am-combo', '1'); i.setAttribute('autocomplete', 'off'); }
     });
   });
+  // Selector de nombres del directorio: se filtra mientras escribes o eliges directamente de la lista
+  (function () {
+    let caja = null, inp = null, opciones = [], sel = -1;
+    function cerrar() { if (caja) caja.style.display = 'none'; inp = null; opciones = []; sel = -1; }
+    function camIdDe(i) {
+      const a = i.getAttribute('onblur') || ''; const k = a.indexOf('(');
+      return k < 0 ? null : a.slice(k + 1, a.indexOf(',', k)).trim();
+    }
+    function pintar() {
+      if (!inp) return;
+      if (!caja) { caja = document.createElement('div'); caja.className = 'am-combo'; document.body.appendChild(caja);
+        caja.addEventListener('mousedown', function (e) { const o = e.target.closest('[data-i]'); e.preventDefault(); if (o) elegir(+o.getAttribute('data-i')); }); }
+      const f = normNombre(inp.value);
+      const lista = DIR.map(function (p) {
+        const textos = [p.nombre].concat(p.alias || []).map(normNombre);
+        let rango = f ? 9 : 1;
+        textos.forEach(function (t) {
+          if (!f) return;
+          if (t.indexOf(f) === 0) rango = Math.min(rango, 0);
+          else if (t.indexOf(' ' + f) >= 0) rango = Math.min(rango, 1);
+          else if (t.indexOf(f) >= 0) rango = Math.min(rango, 2);
+        });
+        return { p: p, r: rango };
+      }).filter(function (x) { return x.r < 9; })
+        .sort(function (a, b) { return a.r - b.r || String(a.p.nombre).localeCompare(String(b.p.nombre)); }).slice(0, 60);
+      opciones = lista.map(function (x) { return x.p; });
+      if (sel >= opciones.length) sel = opciones.length - 1;
+      if (!DIR.length) { caja.innerHTML = '<div class="am-combo-vacio">El directorio de PERSONAL está vacío.</div>'; }
+      else if (!opciones.length) { caja.innerHTML = '<div class="am-combo-vacio">No está en el directorio. Se guardará tal como lo escribes.</div>'; }
+      else caja.innerHTML = opciones.map(function (p, i) {
+        return '<div class="am-combo-op' + (i === sel ? ' am-combo-sel' : '') + '" data-i="' + i + '"><span>' + esc(p.nombre) + (p.uid ? ' <i class="fa-solid fa-user-check am-combo-u" title="Usuario de la app"></i>' : '') + '</span>' +
+          (p.equipo ? '<em>' + esc(p.equipo) + '</em>' : '') + '</div>';
+      }).join('');
+      const r = inp.getBoundingClientRect();
+      const alto = Math.min(300, window.innerHeight - r.bottom - 12);
+      caja.style.left = r.left + 'px'; caja.style.width = Math.max(r.width, 280) + 'px';
+      if (alto < 140) { caja.style.top = ''; caja.style.bottom = (window.innerHeight - r.top + 4) + 'px'; caja.style.maxHeight = Math.min(300, r.top - 12) + 'px'; }
+      else { caja.style.bottom = ''; caja.style.top = (r.bottom + 4) + 'px'; caja.style.maxHeight = alto + 'px'; }
+      caja.style.display = 'block';
+      const s2 = caja.querySelector('.am-combo-sel'); if (s2) s2.scrollIntoView({ block: 'nearest' });
+    }
+    function elegir(i) {
+      const p = opciones[i]; const campo = inp; if (!p || !campo) return;
+      const id = camIdDe(campo);
+      campo.value = p.nombre; cerrar(); campo.blur();
+      if (p.equipo && id !== null) setTimeout(function () {
+        const e = evActual(); const c = e && (e.camareros || []).filter(function (x) { return String(x.id) === String(id); })[0];
+        if (c && c.equipo !== p.equipo) { window.updateCamarero(c.id, 'equipo', p.equipo); try { renderCamarerosView(); } catch (err) {} }
+      }, 50);
+    }
+    document.addEventListener('focusin', function (e) {
+      const t = e.target;
+      if (t && t.getAttribute && t.getAttribute('data-am-combo')) { inp = t; sel = -1; pintar(); } else if (caja && !(caja.contains && caja.contains(t))) cerrar();
+    });
+    document.addEventListener('focusout', function (e) { if (e.target === inp) setTimeout(function () { if (document.activeElement !== inp) cerrar(); }, 120); });
+    document.addEventListener('input', function (e) { if (e.target === inp) { sel = 0; pintar(); } });
+    document.addEventListener('keydown', function (e) {
+      if (e.target !== inp || !caja || caja.style.display === 'none') return;
+      if (e.key === 'ArrowDown') { e.preventDefault(); sel = Math.min(opciones.length - 1, sel + 1); pintar(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); sel = Math.max(0, sel - 1); pintar(); }
+      else if (e.key === 'Enter') { if (sel >= 0 && opciones[sel]) { e.preventDefault(); elegir(sel); } else { inp.blur(); } }
+      else if (e.key === 'Escape') { cerrar(); }
+    });
+    window.addEventListener('scroll', function () { if (inp) pintar(); }, true);
+    window.addEventListener('resize', function () { if (inp) pintar(); });
+  })();
   (function () {
     const orig = window.updateCamarero;
     if (typeof orig !== 'function') return;
@@ -1898,6 +1965,7 @@
   async function renderDirectorio() {
     const root = document.getElementById('am-root-am-personal');
     if (!puedePlan()) { root.innerHTML = cabecera('PERSONAL', '', false) + '<div class="am-bloque">Solo administración y gestión.</div>'; return; }
+    if (!dirSincronizado && window.__sincronizarDirectorio) { dirSincronizado = true; try { await window.__sincronizarDirectorio(); } catch (e) {} }
     await cargarDirectorio();
     const f = normNombre(filtroDir);
     const lista = DIR.filter(function (p) { return !f || normNombre(p.nombre + ' ' + (p.alias || []).join(' ') + ' ' + (p.equipo || '')).indexOf(f) >= 0; })
@@ -1909,7 +1977,7 @@
     if (!lista.length) h += '<tr><td colspan="7" class="am-vacio">' + (DIR.length ? 'Sin resultados.' : 'El directorio está vacío. Pulsa «Importar nombres de las bodas» para empezar.') + '</td></tr>';
     lista.forEach(function (p) {
       const hi = historialDe(p);
-      h += '<tr><td><b>' + esc(p.nombre) + '</b></td><td>' + esc(p.telefono || '') + '</td><td>' + esc(p.equipo || '') + '</td><td class="am-suave">' + esc((p.alias || []).join(', ')) + '</td>' +
+      h += '<tr><td><b>' + esc(p.nombre) + '</b>' + (p.uid ? ' <span class="am-chip-usuario" title="' + esc(p.email || '') + '"><i class="fa-solid fa-user-check"></i> usuario</span>' : '') + '</td><td>' + esc(p.telefono || '') + '</td><td>' + esc(p.equipo || '') + '</td><td class="am-suave">' + esc((p.alias || []).join(', ')) + '</td>' +
         '<td class="am-c"><button class="am-enlace-btn" onclick="amHistorial(\'' + p.id + '\')">' + hi.length + '</button></td><td>' + (hi[0] ? esc(fechaCorta(hi[0].fecha)) : '—') + '</td>' +
         '<td class="am-acc"><button class="am-btn" onclick="amPersona(\'' + p.id + '\')">Editar</button><button class="am-btn" onclick="amFusionar(\'' + p.id + '\')">Unir con…</button></td></tr>';
     });

@@ -460,7 +460,42 @@ function arrancar() {
   window.__arrancarLegado();
   try { if (window.__mejorasArranque) window.__mejorasArranque(); } catch (e) { console.warn('Mejoras', e); }
   setTimeout(escucharCambios, 1500);
+  if (esAdmin()) setTimeout(function () { sincronizarDirectorio().catch(function (e) { console.warn('Directorio', e); }); }, 3000);
 }
+
+// ───────── Los usuarios de la app aparecen solos en el directorio de PERSONAL ─────────
+const ROLES_DIRECTORIO = ['jefesala', 'coordinador', 'cocina', 'camarero'];
+async function sincronizarDirectorio() {
+  if (!esAdmin()) return 0;
+  const us = await getDocs(collection(db, 'users'));
+  const ps = await getDocs(collection(db, 'personal'));
+  const dir = [];
+  ps.forEach(function (d) { const x = d.data(); x.id = d.id; dir.push(x); });
+  const clave = function (t) { return palabras(t).join(' '); };
+  let n = 0;
+  const tareas = [];
+  us.forEach(function (d) {
+    const u = d.data();
+    if (ROLES_DIRECTORIO.indexOf(u.rol) < 0 || !u.nombre) return;
+    const k = clave(u.nombre);
+    const ya = dir.filter(function (p) {
+      if (p.uid === d.id) return true;
+      if (clave(p.nombre) === k) return true;
+      return (p.alias || []).some(function (a) { return clave(a) === k; });
+    })[0];
+    if (ya) {
+      if (!ya.uid || ya.email !== (u.email || '')) tareas.push(setDoc(doc(db, 'personal', ya.id), { uid: d.id, email: u.email || '' }, { merge: true }));
+      return;
+    }
+    n++;
+    tareas.push(setDoc(doc(db, 'personal', 'u_' + d.id), {
+      nombre: mayus(u.nombre), telefono: '', equipo: u.rol === 'cocina' ? 'COCINA' : '', alias: [], uid: d.id, email: u.email || ''
+    }));
+  });
+  await Promise.all(tareas);
+  return n;
+}
+window.__sincronizarDirectorio = sincronizarDirectorio;
 
 // ───────── Usuarios (administrador) ─────────
 let unsubUsuarios = null;
@@ -545,7 +580,8 @@ function formNuevoUsuario() {
       await setDoc(doc(db, 'users', cred.user.uid), { nombre: nombre, email: email, rol: r, creado: serverTimestamp() });
       await signOut(auth2);
       await sendPasswordResetEmail(auth, email);
-      aviso('Acceso creado. Correo enviado a ' + email + '.');
+      try { await sincronizarDirectorio(); } catch (e2) {}
+      aviso('Acceso creado y añadido al directorio de PERSONAL. Correo enviado a ' + email + '.');
       abrirUsuarios();
     } catch (e) { $('nu-msg').textContent = traducirError(e); this.disabled = false; }
   });
