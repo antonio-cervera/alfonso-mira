@@ -431,3 +431,7 @@ body.rol-sinplan #subtab-consumos-control { display: none !important; }
 /* Cabecera del menú: solo el logo */
 .am-cab-lateral { padding: 18px 22px 16px; border-bottom: 1px solid rgba(255,255,255,.08); display: flex; justify-content: center; align-items: center; flex-shrink: 0; }
 .am-cab-lateral .am-logo-lateral { width: 100%; max-width: 190px; margin: 0; flex-basis: auto; }
+
+/* Listado de personal (horarios y pagos) y MIS BODAS según el rol */
+body.rol-coordinador div:has(> #menu-camareros), body.rol-cocina div:has(> #menu-camareros), body.rol-camarero div:has(> #menu-camareros) { display: none !important; }
+body.rol-admin .am-solo-equipo, body.rol-gestor .am-solo-equipo { display: none !important; }

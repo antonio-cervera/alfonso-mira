@@ -83,6 +83,7 @@
   // ═════════ Vistas nuevas y menú ═════════
   const VISTAS = {
     'am-planning': { titulo: 'PLANNING SEMANAL', nivel: 'top', render: function () { renderPlanning(); } },
+    'am-misbodas': { titulo: 'MIS BODAS', nivel: 'top', render: function () { renderMisBodas(); } },
     'am-personal': { titulo: 'PERSONAL', nivel: 'top', render: function () { renderDirectorio(); } },
     'am-papelera': { titulo: 'PAPELERA', nivel: 'top', render: function () { renderPapelera(); } },
     'am-ceremonia': { titulo: 'CEREMONIA', nivel: 'jsw', render: function () { renderCeremonia(); } },
@@ -96,6 +97,7 @@
     const historico = document.getElementById('tab-historico');
     if (historico && !document.getElementById('tab-am-planning')) {
       historico.insertAdjacentHTML('afterend',
+        '<button onclick="switchTab(\'am-misbodas\')" id="tab-am-misbodas" class="nav-btn am-solo-equipo"><i class="fa-solid fa-user-clock w-6 text-center mr-2"></i> MIS BODAS</button>' +
         '<button onclick="switchTab(\'am-planning\')" id="tab-am-planning" class="nav-btn"><i class="fa-solid fa-calendar-week w-6 text-center mr-2"></i> PLANNING SEMANAL</button>' +
         '<button onclick="switchTab(\'am-cronograma\')" id="tab-am-cronograma" class="nav-btn"><i class="fa-solid fa-list-check w-6 text-center mr-2"></i> CRONOGRAMA LOGÍSTICA</button>' +
         '<button onclick="switchTab(\'am-personal\')" id="tab-am-personal" class="nav-btn am-solo-plan"><i class="fa-solid fa-address-book w-6 text-center mr-2"></i> PERSONAL</button>' +
@@ -825,8 +827,10 @@
       h += '</div>';
     });
     h += '</div><p class="am-suave">Las fechas de montaje y recogida salen de la FICHA DE LA FINCA; las de decoración y detalles, de PROTOCOLO.</p>';
-    if (!DIR.length && puedePlan()) { try { await cargarDirectorio(); } catch (err) {} }
-    h += personalSemana(dias, evs);
+    if (verPersonal()) {
+      if (!DIR.length && puedePlan()) { try { await cargarDirectorio(); } catch (err) {} }
+      h += personalSemana(dias, evs);
+    }
     root.innerHTML = h;
   }
   // Personal de la semana: sustituye la hoja a mano (una columna por boda, hora de entrada y confirmación)
@@ -1536,6 +1540,57 @@
     window.costesBannerHtml = function () { return puedePlan() ? orig.apply(this, arguments) : ''; };
   })();
 
+  // ═════════ Listado de personal (horarios y pagos): solo administración, gestión y jefe de sala ═════════
+  function rolActual() { const a = api(); return a ? a.rol() : ''; }
+  function verPersonal() { return ['admin', 'gestor', 'jefesala'].indexOf(rolActual()) >= 0; }
+  (function () {
+    const orig = window.switchTab;
+    window.switchTab = function (tabId) {
+      if (tabId === 'camareros-listado' && api() && !verPersonal()) { aviso('El listado de personal (horarios y pagos) solo lo ven administración, gestión y jefe de sala.'); return; }
+      return orig.apply(this, arguments);
+    };
+  })();
+
+  // ═════════ MIS BODAS: el histórico de cada persona ═════════
+  function palabrasNom(t) { return normNombre(t).split('.').join('').split(' ').filter(function (x) { return x; }); }
+  function miPuesto(e) {
+    const yo = palabrasNom(api() ? api().nombre() : '');
+    if (!yo.length) return null;
+    const c = (e.camareros || []).filter(function (x) {
+      const p = palabrasNom(x && x.nombre); if (!p.length) return false;
+      if (p.join(' ') === yo.join(' ')) return true;
+      return p.length >= 2 && p.every(function (w) { return yo.indexOf(w) >= 0; });
+    })[0];
+    return c || null;
+  }
+  let mbFiltro = '', mbAnio = '';
+  function renderMisBodas() {
+    const root = document.getElementById('am-root-am-misbodas');
+    const hoy = isoDe(new Date());
+    const l = Object.keys(appData.events).map(function (id) { const e = appData.events[id]; const c = miPuesto(e); return c ? { id: id, e: e, c: c } : null; })
+      .filter(function (x) { return x; }).sort(function (a, b) { return String(b.e.fecha).localeCompare(String(a.e.fecha)); });
+    const anios = []; l.forEach(function (x) { const a = String(x.e.fecha || '').slice(0, 4); if (a && anios.indexOf(a) < 0) anios.push(a); });
+    const f = normNombre(mbFiltro);
+    const vis = l.filter(function (x) { return (!mbAnio || String(x.e.fecha).slice(0, 4) === mbAnio) && (!f || normNombre(x.e.boda + ' ' + x.e.ubicacion).indexOf(f) >= 0); });
+    const prox = l.filter(function (x) { return x.e.fecha >= hoy; }).length;
+    let h = cabecera('MIS BODAS', (api() ? api().nombre() : '') + ' · todas las bodas en las que has trabajado', false);
+    h += '<div class="am-ctl-kpis"><div class="am-ctl-kpi ok"><span>BODAS EN TOTAL</span><b>' + l.length + '</b></div><div class="am-ctl-kpi"><span>PRÓXIMAS</span><b>' + prox + '</b></div><div class="am-ctl-kpi"><span>CELEBRADAS</span><b>' + (l.length - prox) + '</b></div></div>';
+    h += '<div class="am-fila"><input class="am-buscar" placeholder="Buscar por boda o lugar" value="' + esc(mbFiltro) + '" oninput="amMbFiltro(this.value)"><select class="am-buscar" style="max-width:160px" onchange="amMbAnio(this.value)"><option value="">Todos los años</option>' +
+      anios.map(function (a) { return '<option' + (a === mbAnio ? ' selected' : '') + '>' + a + '</option>'; }).join('') + '</select></div>';
+    h += '<div class="am-bloque am-sinpad"><table class="am-tabla"><thead><tr><th>Fecha</th><th>Boda</th><th>Lugar</th><th>Mi función</th><th>Equipo · zona</th><th class="am-c">Estado</th><th></th></tr></thead><tbody>';
+    if (!vis.length) h += '<tr><td colspan="7" class="am-vacio">' + (l.length ? 'Sin resultados.' : 'Todavía no apareces en ninguna boda. Tu nombre de usuario tiene que coincidir con el del Listado de personal; si no te salen tus bodas, avisa a gestión.') + '</td></tr>';
+    vis.forEach(function (x) {
+      const futura = x.e.fecha >= hoy;
+      h += '<tr><td><b>' + esc(fechaCorta(x.e.fecha)) + '</b>' + (x.e.hora ? ' · ' + esc(x.e.hora) : '') + '</td><td><b>' + esc(x.e.boda) + '</b></td><td>' + esc(x.e.ubicacion) + '</td>' +
+        '<td>' + esc(txt(x.c.responsabilidad).toUpperCase()) + '</td><td>' + esc([txt(x.c.equipo), txt(x.c.zona)].filter(function (v) { return v && v !== '-'; }).join(' · ')) + '</td>' +
+        '<td class="am-c"><span class="am-ctl-b ' + (futura ? 'PARCIAL' : 'SI') + '">' + (futura ? 'PRÓXIMA' : 'CELEBRADA') + '</span></td>' +
+        '<td><button class="am-btn am-prin" onclick="abrirEvento(\'' + x.id + '\', ' + (puedeEditar() ? 'false' : 'true') + ')">Abrir</button></td></tr>';
+    });
+    root.innerHTML = h + '</tbody></table></div>';
+  }
+  window.amMbFiltro = function (v) { mbFiltro = v; renderMisBodas(); const i = document.querySelector('#am-root-am-misbodas .am-buscar'); if (i) { i.focus(); i.setSelectionRange(v.length, v.length); } };
+  window.amMbAnio = function (v) { mbAnio = v; renderMisBodas(); };
+
   // ═════════ NUE-07 · Plano del cóctel ═════════
   const PC_TIPOS = [
     ['JAMÓN', '#8C3B4E', 120, 50], ['ANDALUZA', '#B5651D', 120, 50], ['QUESOS', '#C48A1E', 120, 50], ['BARRA', '#3F5A2E', 180, 45],
@@ -1876,6 +1931,7 @@
         { id: 'am-planococtel', t: 'PLANO CÓCTEL', pasos: function () { const e = evActual(); return e && e.plano_coctel && (e.plano_coctel.items || []).length ? [paso('am-planococtel')] : []; } },
         { id: 'am-control', t: 'CONTROL DE DOCUMENTACIÓN', pasos: function () { return [paso('am-control')]; } }
       ].filter(function (x) { return x.pasos().length > 0; });
+      if (!verPersonal()) { const ip = g.findIndex(function (x) { return x.id === 'personal'; }); if (ip >= 0) g.splice(ip, 1); }
       let i = g.findIndex(function (x) { return x.id === 'protocolo'; });
       if (i < 0) i = g.length - 1;
       g.splice.apply(g, [i + 1, 0].concat(nuevos));
