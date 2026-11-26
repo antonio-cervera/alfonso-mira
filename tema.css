@@ -531,3 +531,28 @@ body.am-viendo-como .nb-menu-usuarios { display: none !important; }
 @media print { .am-vercomo-barra { display: none !important; } }
 /* Cronograma logística: solo administración, gestor y jefe de sala */
 body.rol-coordinador #tab-am-cronograma, body.rol-cocina #tab-am-cronograma, body.rol-camarero #tab-am-cronograma { display: none !important; }
+/* CAMARERO: dentro de su boda solo CONSUMOS, su EQUIPO, TAREAS, PLANO (rangos y seating), PLANO CÓCTEL (rangos) y su minuta */
+body.rol-camarero #tab-am-planning, body.rol-camarero #tab-documentacion, body.rol-camarero #tab-coordinadores-material,
+body.rol-camarero #tab-jsw-minutaboda, body.rol-camarero #tab-jsw-minutacamareros, body.rol-camarero #tab-jsw-protocolo,
+body.rol-camarero #tab-am-ceremonia, body.rol-camarero #tab-jsw-fichainfo, body.rol-camarero #tab-am-finca, body.rol-camarero #tab-am-control,
+body.rol-camarero #tab-pedido-material, body.rol-camarero #tab-informe-boda, body.rol-camarero #tab-imprimir-todo,
+body.rol-camarero div:has(> #menu-evaluacion),
+body.rol-camarero #btn-mode-principal,
+body.rol-camarero [id^="subtab-coordequipos-"]:not(.am-cam-ok),
+body.rol-camarero .am-mn-solo-yo button:not(.am-mn-imp), body.rol-camarero .am-mn-pers,
+body.rol-camarero .am-pc-modos { display: none !important; }
+/* Plano cóctel: modo rangos */
+.am-pc-modos { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.am-pc-r { cursor: pointer; flex-direction: column; }
+.am-pc-badge { display: block; font-size: 10px; font-weight: 900; opacity: .85; }
+.am-pc-mio { outline: 3px solid #1F1B16; outline-offset: 2px; }
+.am-pc-rangos { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; max-width: 900px; }
+.am-pc-rangos .zone-card { position: static; flex: 1 1 160px; cursor: default; box-shadow: none; }
+.am-pc-rangos .zone-card.am-mn-zona-mia { outline: 4px solid #1F1B16; outline-offset: 1px; }
+.am-pc-rt { font-weight: 900; text-transform: uppercase; letter-spacing: .05em; font-size: 11px; border-bottom: 1px solid rgba(0,0,0,.2); padding-bottom: 3px; margin-bottom: 3px; }
+.am-pc-pick { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 80; display: flex; align-items: center; justify-content: center; }
+.am-pc-pick.am-oculto { display: none; }
+.am-pc-pick-c { background: #fff; border-radius: 14px; padding: 18px; width: 300px; text-align: center; }
+.am-pc-pick-c h3 { font-weight: 900; font-size: 18px; margin-bottom: 10px; }
+.am-pc-pick-g { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 12px; }
+.am-pc-pick-g button { height: 40px; border-radius: 8px; font-weight: 900; border: 1px solid rgba(0,0,0,.15); }

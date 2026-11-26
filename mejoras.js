@@ -1049,7 +1049,9 @@
   function renderMinutas() {
     const root = document.getElementById('am-root-am-minutas');
     const e = evActual(); if (!e) return;
-    const pers = personasMinuta(e);
+    let pers = personasMinuta(e);
+    const soloYo = esCamarero();
+    if (soloYo) { mnModo = 'personal'; const yo = miPuesto(e); pers = pers.filter(function (p) { return yo && p.cam === yo; }); }
     if (!mnSel || mnSel._ev !== currentEventId) { mnSel = { _ev: currentEventId }; pers.forEach(function (p) { mnSel[p.cam.id] = true; }); mnCopias = {}; }
     let esp = []; try { esp = getMinutasEspeciales(e); } catch (err) {}
     const mesas = (e.items || []).filter(function (i) { return i.entity === 'mesa'; }).length;
@@ -1058,6 +1060,7 @@
     h += '<div class="am-mn-modos">' + [['personal', 'Personal: plano + tareas'], ['boda', 'Minuta de la boda'], ['especiales', 'Minutas especiales']].map(function (m) {
       return '<button class="am-btn' + (mnModo === m[0] ? ' am-prin' : '') + '" onclick="amMnModo(\'' + m[0] + '\')">' + m[1] + '</button>'; }).join('') +
       '<button class="am-btn am-prin am-mn-imp" onclick="amMnImprimir()"><i class="fa-solid fa-print mr-1"></i>IMPRIMIR</button></div>';
+    if (soloYo) h = h.split('<div class="am-mn-modos">').join('<div class="am-mn-modos am-mn-solo-yo">');
     h += '<div class="am-bloque am-mn-opc">';
     if (mnModo === 'personal') {
       h += '<p class="am-suave">Una hoja por persona del LISTADO DE PERSONAL: <b>delante el plano</b> con su rango marcado y <b>detrás la minuta</b> de camareros, el resumen de comensales con los menús especiales y <b>sus tareas</b> (las de la hoja de equipo incluidas).</p>' +
@@ -1125,7 +1128,8 @@
       tra.forEach(function (t) {
         const p = t._p, cuerpo = t.querySelector('.am-mn-cuerpo');
         cuerpo.style.height = (t.querySelector('.am-mn-in').clientHeight - t.querySelector('.am-mn-cab').offsetHeight - 4) + 'px';
-        const f = p.idx >= 0 && fichas[p.idx] ? sinControles(fichas[p.idx].cloneNode(true)) : null;
+        const fx = fichas.filter(function (x) { return x.getAttribute('data-cam') === String(p.cam.id); })[0];
+        const f = fx ? sinControles(fx.cloneNode(true)) : null;
         const minuta = mc ? mc.cloneNode(true) : null; if (minuta) minuta.classList.add('am-mn-compacto');
         let sinFicha = null;
         if (!f) { try { sinFicha = document.createElement('div'); sinFicha.className = 'ts-card'; sinFicha.innerHTML = tsHojaHtml(e, p.cam); } catch (err) { sinFicha = null; } }
@@ -1619,6 +1623,50 @@
     })[0];
     return c || null;
   }
+  // ═════════ CAMARERO: dentro de su boda solo ve CONSUMOS, su EQUIPO, sus TAREAS, el plano de rangos,
+  // el seating, el plano de rangos del cóctel y su minuta para imprimir ═════════
+  function esCamarero() { return rolActual() === 'camarero'; }
+  window.amEsCamarero = esCamarero;
+  window.amMiPuesto = function (e) { return e ? miPuesto(e) : null; };
+  const CAM_TABS = ['calendar', 'historico', 'am-misbodas', 'coordinadores-consumos', 'coordinadores-equipos', 'plano', 'am-planococtel', 'am-minutas', '__am'];
+  function miSubEquipo(e) {
+    const c = e ? miPuesto(e) : null; if (!c) return '';
+    const q = normNombre(c.equipo);
+    if (q === 'SALA') return 'sala'; if (q === 'COCTEL' || q === 'CÓCTEL') return 'coctel'; if (q === 'COCINA') return 'cocina';
+    if (q === 'OFFICE' || q === 'OFFICE EVENTO') return 'office'; if (q === 'BARRA' || q === 'BARRA LIBRE') return 'barralibre';
+    return '';
+  }
+  function marcarSubtabsCamarero() {
+    const mi = miSubEquipo(evActual());
+    document.querySelectorAll('[id^="subtab-coordequipos-"]').forEach(function (b) {
+      const k = b.id.split('subtab-coordequipos-')[1];
+      b.classList.toggle('am-cam-ok', k === 'tareas' || (mi && k === mi));
+    });
+    return mi;
+  }
+  (function () {
+    const orig = window.switchTab;
+    window.switchTab = function (tabId) {
+      if (api() && esCamarero() && CAM_TABS.indexOf(tabId) < 0) { tabId = evActual() ? 'coordinadores-consumos' : 'calendar'; }
+      const r = orig.call(this, tabId);
+      if (api() && esCamarero()) {
+        if (tabId === 'coordinadores-equipos') { const mi = marcarSubtabsCamarero(); try { switchSubTab('coordequipos', mi || 'tareas'); } catch (e) {} }
+        if (tabId === 'plano') { try { if (currentPlanoMode === 'principal') switchPlanoMode('camareros'); } catch (e) {} }
+      }
+      return r;
+    };
+    const origSub = window.switchSubTab;
+    window.switchSubTab = function (group, tabId) {
+      if (api() && esCamarero() && group === 'coordequipos') { const mi = marcarSubtabsCamarero(); if (tabId !== 'tareas' && tabId !== mi) tabId = mi || 'tareas'; }
+      return origSub.call(this, group, tabId);
+    };
+    const origPm = window.switchPlanoMode;
+    window.switchPlanoMode = function (mode) {
+      if (api() && esCamarero() && mode === 'principal') mode = 'camareros';
+      return origPm.call(this, mode);
+    };
+  })();
+
   let mbFiltro = '', mbAnio = '';
   function renderMisBodas() {
     const root = document.getElementById('am-root-am-misbodas');
@@ -1754,10 +1802,60 @@
   ];
   let pcSel = null;
   function pc() { const e = evActual(); if (!e.plano_coctel || typeof e.plano_coctel !== 'object') e.plano_coctel = { items: [], fondo: '' }; if (!Array.isArray(e.plano_coctel.items)) e.plano_coctel.items = []; return e.plano_coctel; }
+  // Dos planos, como en PLANO BODA: el original (se monta) y el de rangos (se asigna un rango de camareros a cada punto)
+  let pcModo = 'original';
+  window.amPcModo = function (m) { pcModo = m; pcSel = null; renderPlanoCoctel(); };
+  function pcRangoCol(r) { try { return ZONE_COLORS[r] || null; } catch (e) { return null; } }
+  function pcRangosHtml(e, d, mio) {
+    const usados = {};
+    d.items.forEach(function (it) { if (it.rango && pcRangoCol(it.rango)) usados[it.rango] = []; });
+    (e.camareros || []).forEach(function (c) { const z = txt(c.zona); if (txt(c.nombre) && usados[z]) usados[z].push(c); });
+    let orden = []; try { orden = ZONE_ORDER.slice(); } catch (er) {}
+    const ks = Object.keys(usados).sort(function (a, b) { return orden.indexOf(a) - orden.indexOf(b); });
+    if (!ks.length) return '<div class="am-suave" style="margin-top:10px;">Pulsa un punto del plano para asignarle un rango de camareros.</div>';
+    return '<div class="am-pc-rangos">' + ks.map(function (k) {
+      const c = pcRangoCol(k);
+      return '<div class="zone-card' + (mio === k ? ' am-mn-zona-mia' : '') + '" style="background:' + c.bg + ';color:' + c.text + ';"><div class="am-pc-rt">' + esc(c.name) + '</div>' +
+        (usados[k].length ? usados[k].map(function (w) { return '<div>' + esc(txt(w.nombre).toUpperCase()) + ' <small>(' + esc(txt(w.responsabilidad).charAt(0)) + ')</small></div>'; }).join('') : '<div style="opacity:.6;font-style:italic;">Sin camareros</div>') + '</div>';
+    }).join('') + '</div>';
+  }
+  function renderPlanoCoctelRangos(root, d) {
+    const e = evActual();
+    const yo = esCamarero() ? miPuesto(e) : null, mio = yo ? txt(yo.zona) : '';
+    let h = '<div class="am-pc-lienzo plan-grid" id="am-pc-lienzo" style="' + (d.fondo ? 'background-image:url(' + d.fondo + ');background-size:contain;background-repeat:no-repeat;background-position:center;' : '') + '">';
+    d.items.forEach(function (it) {
+      const esTexto = it.tipo === 'TEXTO', c = it.rango ? pcRangoCol(it.rango) : null;
+      const fondo = esTexto ? '' : (c ? 'background:' + c.bg + ';color:' + c.text + ';' : 'background:#E8E3D8;color:#7A7163;');
+      h += '<div class="am-pc-it am-pc-r' + (esTexto ? ' texto' : '') + (it.tipo === 'MESA ALTA' ? ' redondo' : '') + (mio && !esTexto && it.rango === mio ? ' am-pc-mio' : '') + '" data-id="' + it.id + '" style="left:' + it.x + 'px;top:' + it.y + 'px;width:' + it.w + 'px;height:' + it.h + 'px;' + fondo + '">' +
+        '<span>' + esc(it.texto || it.tipo) + (c && !esTexto ? '<b class="am-pc-badge">' + esc(it.rango) + '</b>' : '') + '</span></div>';
+    });
+    h += '</div>' + pcRangosHtml(e, d, mio);
+    h += '<div id="am-pc-pick" class="am-pc-pick am-oculto"></div>';
+    root.insertAdjacentHTML('beforeend', h);
+    const lz = document.getElementById('am-pc-lienzo');
+    lz.addEventListener('click', function (ev) {
+      if (enVision() || esCamarero()) return;
+      const el = ev.target.closest('.am-pc-it'); if (!el || el.classList.contains('texto')) return;
+      const id = el.getAttribute('data-id');
+      let orden = []; try { orden = ZONE_ORDER.slice(); } catch (er) {}
+      const pk = document.getElementById('am-pc-pick');
+      pk.innerHTML = '<div class="am-pc-pick-c"><h3>Asignar rango</h3><div class="am-pc-pick-g">' + orden.map(function (k) { const c = pcRangoCol(k); return '<button style="background:' + c.bg + ';color:' + c.text + ';" onclick="amPcRango(\'' + id + '\',\'' + k + '\')">' + k + '</button>'; }).join('') +
+        '</div><button class="am-btn" onclick="amPcRango(\'' + id + '\',\'\')">Quitar rango</button> <button class="am-btn" onclick="document.getElementById(\'am-pc-pick\').classList.add(\'am-oculto\')">Cancelar</button></div>';
+      pk.classList.remove('am-oculto');
+    });
+  }
+  window.amPcRango = function (id, r) {
+    const it = pc().items.filter(function (x) { return x.id === id; })[0];
+    if (it && it.tipo !== 'TEXTO') { if (r) it.rango = r; else delete it.rango; guardarEv(); }
+    renderPlanoCoctel();
+  };
   function renderPlanoCoctel() {
     const root = document.getElementById('am-root-am-planococtel');
     const d = pc();
-    let h = cabecera('PLANO CÓCTEL');
+    if (esCamarero()) pcModo = 'rangos';
+    let h = cabecera(pcModo === 'rangos' ? 'PLANO CÓCTEL · RANGOS CAMAREROS' : 'PLANO CÓCTEL');
+    h += '<div class="am-pc-modos">' + [['original', 'Plano original'], ['rangos', 'Rangos camareros']].map(function (m) { return '<button class="am-btn' + (pcModo === m[0] ? ' am-prin' : '') + '" onclick="amPcModo(\'' + m[0] + '\')">' + m[1] + '</button>'; }).join('') + '</div>';
+    if (pcModo === 'rangos') { root.innerHTML = h; renderPlanoCoctelRangos(root, d); return; }
     h += '<div class="am-pc-barra">' + PC_TIPOS.map(function (t, i) { return '<button class="am-pc-add" style="--c:' + (t[1] || '#1F1B16') + '" onclick="amPcAdd(' + i + ')">+ ' + esc(t[0]) + '</button>'; }).join('') + '</div>';
     h += '<div class="am-pc-herr"><label class="am-btn">Imagen de fondo<input type="file" accept="image/*" class="am-oculto" onchange="amPcFondo(this)"></label>' +
       (d.fondo ? '<button class="am-btn" onclick="amPcFondoQuitar()">Quitar fondo</button>' : '') +

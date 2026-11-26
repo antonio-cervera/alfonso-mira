@@ -471,13 +471,13 @@
         @media print { body * { visibility:hidden !important; } #seating-a4-sheet,#seating-a4-sheet * { visibility:visible !important; } #seating-a4-sheet { position:absolute;left:0;top:0;width:210mm;min-height:297mm;box-shadow:none;border:none; } }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="tema-colores.css?v=1795704424">
-    <link rel="stylesheet" href="tema.css?v=1795704424">
-    <link rel="stylesheet" href="tw.css?v=1795704424">
+    <link rel="stylesheet" href="tema-colores.css?v=1795704877">
+    <link rel="stylesheet" href="tema.css?v=1795704877">
+    <link rel="stylesheet" href="tw.css?v=1795704877">
 </head>
 <body class="h-screen w-screen flex flex-row">
-    <script src="firebase-config.js?v=1795704424"></script>
-    <script src="puente.js?v=1795704424"></script>
+    <script src="firebase-config.js?v=1795704877"></script>
+    <script src="puente.js?v=1795704877"></script>
 
     <!-- DATALISTS PARA MATERIALES -->
     <datalist id="dl-manteleria-art"><option value="MANTELES CASA"></option><option value="MANTELES ALQUILER"></option><option value="CUBREMANTEL CASA"></option><option value="CUBREMANTEL ALQUILER"></option><option value="SERVILLETAS CASA"></option><option value="SERVILLETAS ALQUILER"></option><option value="LITOS"></option></datalist>
@@ -5355,8 +5355,15 @@
             if (!root) return;
             if (!currentEventId || !appData.events[currentEventId]) { root.innerHTML = `<div class="p-10 text-center text-[#9CA3AF] font-bold">Abre o crea un registro para ver esta hoja.</div>`; return; }
             const ev = appData.events[currentEventId];
-            const lista = tsCamareros(ev);
+            let lista = tsCamareros(ev);
             const todos = (ev.camareros || []).filter(jswHasName);
+            // Camarero: solo su ficha y la de su compañero/a de rango
+            const soloYo = !!(window.amEsCamarero && window.amEsCamarero());
+            if (soloYo) {
+                const yo = window.amMiPuesto ? window.amMiPuesto(ev) : null;
+                const zy = yo ? zonaKey(yo.zona) : '';
+                lista = lista.filter(x => yo && (x.cam === yo || (zy && zonaKey(x.cam.zona) === zy)));
+            }
 
             const fichas = lista.map(({ cam, equipo, leader }) => {
                 const id = String(cam.id);
@@ -5386,7 +5393,7 @@
                     filas += `<tr><td class="ts-c">${pre(i)}</td>${celCoctel}<td class="ts-c">${servicio[i]}</td><td class="ts-c">${sel('post_' + i, TS_POST)}</td></tr>`;
                 }
                 const color = beb ? '#1155CC' : '#CC0000';
-                return `<div class="ts-card">
+                return `<div class="ts-card" data-cam="${escJsw(id)}">
                     <table class="ts-tab">
                         <colgroup><col style="width:23%"><col style="width:20%"><col style="width:33%"><col style="width:24%"></colgroup>
                         <tr><td class="ts-lbl">ROL:</td><td class="ts-c" colspan="2"><div class="flex items-center justify-between pr-2"><span class="ts-txt"><b>${escJsw(equipo)}${leader ? ' · JEFE/A DE EQUIPO' : ''}</b></span>${jswSuffix(cam)}</div></td><td class="ts-head" style="background:${color};">${beb ? 'BEBIDAS' : 'COMIDAS'}</td></tr>
@@ -5403,7 +5410,7 @@
                     <h2 class="text-2xl font-black text-[#1F2937] uppercase tracking-wide"><i class="fa-solid fa-list-check text-[#4F46E5] mr-2"></i> Tareas Servicio</h2>
                     <div class="text-xs font-bold text-[#6B7280]"><i class="fa-solid fa-link mr-1"></i> Camareros, rangos y compañeros desde LISTADO PERSONAL</div>
                 </div>
-                <div class="jsw-grid">${jswEquiposCells(ev)}</div>
+                ${soloYo ? '' : `<div class="jsw-grid">${jswEquiposCells(ev)}</div>`}
                 ${lista.length ? `<div class="ts-grid">${fichas}</div>` : '<div class="max-w-[1100px] mx-auto mt-4 bg-white border rounded-xl p-8 text-center text-[#9CA3AF] font-bold">No hay camareros asignados a los equipos en LISTADO PERSONAL.</div>'}`;
         }
 
@@ -5889,7 +5896,7 @@
                     if (prev !== null) { let d = min - prev; if (d < 0) d += 1440; dur = `${Math.floor(d / 60)}:${p2(d % 60)}`; }
                     prev = min;
                 }
-                return `<tr style="background:${i % 2 ? '#D9D9D9' : '#FFF'};"><td class="evt-t">${tarea}</td><td>${sel(i, 'h', horas, r.h)}</td><td>${sel(i, 'm', mins, r.m)}</td><td class="evt-dur">${evTimingDurHtml(kind, i, r, dur)}</td><td>${evTimingComHtml(kind, i, r)}</td><td><input type="text" value="${escapeHtml(r.p || '')}" oninput="evTimingSet('${kind}', ${i}, 'p', this.value)" class="evt-in"></td></tr>`;
+                return `<tr style="background:${i % 2 ? '#E6DFD1' : '#fff'};"><td class="evt-t">${tarea}</td><td>${sel(i, 'h', horas, r.h)}</td><td>${sel(i, 'm', mins, r.m)}</td><td class="evt-dur">${evTimingDurHtml(kind, i, r, dur)}</td><td>${evTimingComHtml(kind, i, r)}</td><td><input type="text" value="${escapeHtml(r.p || '')}" oninput="evTimingSet('${kind}', ${i}, 'p', this.value)" class="evt-in"></td></tr>`;
             }).join('');
             const ctrl = t._controller != null ? t._controller : evResp(ev, ['JEFE/A SALA']);
             return `<div class="evc-wrap" style="max-width:1000px;">
@@ -7120,8 +7127,8 @@
             pzImprimirBloques(bloques);
         }
     </script>
-    <script src="ficha_campos.js?v=1795704424"></script>
-    <script src="mejoras.js?v=1795704424"></script>
+    <script src="ficha_campos.js?v=1795704877"></script>
+    <script src="mejoras.js?v=1795704877"></script>
     <!-- Acceso (Firebase) -->
     <div id="nb-capa" class="nb-capa">
         <div id="nb-carga" class="nb-tarjeta">
@@ -7149,7 +7156,7 @@
     </div>
     <div id="nb-modal" class="nb-modal nb-oculto"><div id="nb-modal-caja" class="nb-modal-caja"></div></div>
 
-    <script type="module" src="nube.js?v=1795704424"></script>
+    <script type="module" src="nube.js?v=1795704877"></script>
     <script>if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function (e) { console.warn('Sin modo offline', e); }); }); }</script>
 </body>
 </html>
