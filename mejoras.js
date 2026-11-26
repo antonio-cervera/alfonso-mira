@@ -889,7 +889,7 @@
   // ═════════ Minutas para imprimir (4 por A4, recortables) ═════════
   // Personal: delante el plano de la boda; detrás su cuadro de tareas, la minuta de camareros y los menús especiales.
   // Minuta de la boda y minutas especiales: con el logo oficial, tantas copias como mesas o personas.
-  let mnModo = 'personal', mnDoble = true, mnSel = null, mnCopias = {};
+  let mnModo = 'personal', mnDoble = true, mnFolio = true, mnSel = null, mnCopias = {};
   const MN_W = 105, MN_H = 148.5; // mm
   function mmPx(mm) { return mm * 96 / 25.4; }
   function sinControles(nodo) {
@@ -1004,12 +1004,30 @@
     const i = document.createElement('div'); i.className = 'am-mn-in'; t.appendChild(i);
     return { t: t, i: i };
   }
-  function hoja(hojas, tarjetas) {
-    for (let k = 0; k < tarjetas.length; k += 4) {
-      const h = document.createElement('div'); h.className = 'am-hoja';
-      tarjetas.slice(k, k + 4).forEach(function (t) { h.appendChild(t || tarjeta('vacia').t); });
+  function hoja(hojas, tarjetas, porHoja) {
+    const n = porHoja || 4;
+    for (let k = 0; k < tarjetas.length; k += n) {
+      const h = document.createElement('div'); h.className = 'am-hoja' + (n === 1 ? ' am-hoja-1' : '');
+      tarjetas.slice(k, k + n).forEach(function (t) { h.appendChild(t || tarjeta('vacia').t); });
       hojas.appendChild(h);
     }
+  }
+  // Resumen de comensales (plano) + listado de menús especiales con persona y mesa
+  function comensalesNodo(e) {
+    let r = null; try { r = rbComensales(e); } catch (err) {}
+    let cajas = []; try { cajas = meBoxes(e); } catch (err) {}
+    const d = document.createElement('div'); d.className = 'am-mn-com';
+    let h = '<div class="am-mn-com-t">COMENSALES</div>';
+    if (r) h += '<div class="am-mn-com-k">' + [['PAX', r.pax], ['ADULTOS', r.adultos], ['CADETES', r.cadetes], ['STAFF', r.staff], ['NIÑOS', r.ninos], ['TRONAS', r.tronas]].map(function (x) { return '<div><span>' + x[0] + '</span><b>' + x[1] + '</b></div>'; }).join('') + '</div>';
+    h += '<div class="am-mn-com-t">MENÚS ESPECIALES</div>';
+    if (!cajas.length) h += '<div class="am-mn-com-v">Sin menús especiales.</div>';
+    else h += '<table class="am-mn-com-tab"><tr><th>MESA</th><th>NOMBRE</th><th>MENÚ</th></tr>' + [].concat.apply([], cajas.map(function (b) {
+      return b.personas.map(function (x) { return { mesa: txt(x.mesa), nombre: txt(x.nombre), b: b }; });
+    })).sort(function (a, b) { return (parseInt(a.mesa, 10) || 999) - (parseInt(b.mesa, 10) || 999); }).map(function (x) {
+      return '<tr><td class="am-c"><b>' + esc(x.mesa || '—') + '</b></td><td>' + esc(x.nombre) + '</td><td><span style="border-left:5px solid ' + x.b.color + ';padding-left:4px;">' + esc(txt(x.b.tipo) || 'ESPECIAL') + (txt(x.b.menu) ? ' · ' + esc(txt(x.b.menu)) : '') + '</span></td></tr>';
+    }).join('') + '</table>';
+    d.innerHTML = h;
+    return d;
   }
   function especialesNota(e) {
     let cajas = []; try { cajas = meBoxes(e); } catch (err) {}
@@ -1042,7 +1060,8 @@
       '<button class="am-btn am-prin am-mn-imp" onclick="amMnImprimir()"><i class="fa-solid fa-print mr-1"></i>IMPRIMIR</button></div>';
     h += '<div class="am-bloque am-mn-opc">';
     if (mnModo === 'personal') {
-      h += '<p class="am-suave">Una minuta por persona del LISTADO DE PERSONAL: <b>delante el plano</b> de la boda y <b>detrás su cuadro de tareas</b>, la minuta de camareros y los menús especiales. 4 minutas por A4.</p>' +
+      h += '<p class="am-suave">Una hoja por persona del LISTADO DE PERSONAL: <b>delante el plano</b> con su rango marcado y <b>detrás la minuta</b> de camareros, el resumen de comensales con los menús especiales y <b>sus tareas</b> (las de la hoja de equipo incluidas).</p>' +
+        '<div class="am-mn-modos">' + [[true, 'Un folio por persona (A4)'], [false, '4 por A4 (tamaño A6)']].map(function (f) { return '<button class="am-btn' + (mnFolio === f[0] ? ' am-prin' : '') + '" onclick="amMnFolio(' + f[0] + ')">' + f[1] + '</button>'; }).join('') + '</div>' +
         '<label class="am-mn-chk"><input type="checkbox"' + (mnDoble ? ' checked' : '') + ' onchange="amMnDoble(this.checked)"> Doble cara (en la impresora: «Imprimir en ambas caras · borde largo»)</label>' +
         '<div class="am-mn-pers">' + pers.map(function (p) { return '<label><input type="checkbox"' + (mnSel[p.cam.id] ? ' checked' : '') + ' onchange="amMnPers(' + esc(JSON.stringify(p.cam.id)) + ',this.checked)"> ' + esc(txt(p.cam.nombre).toUpperCase()) + ' <small>' + esc(p.equipo) + '</small></label>'; }).join('') + '</div>';
     } else if (mnModo === 'boda') {
@@ -1072,17 +1091,21 @@
       const del = [], tra = [];
       elegidos.forEach(function (p) {
         // Delante: plano
-        const a = tarjeta('frente'); a.t._p = p; del.push(a.t);
+        const a = tarjeta('frente' + (mnFolio ? ' folio' : '')); a.t._p = p; del.push(a.t);
         a.i.innerHTML = '<div class="am-mn-cab"><b>' + esc(txt(p.cam.nombre).toUpperCase()) + '</b><span>' + esc(p.equipo) + '</span></div><div class="am-mn-plano"></div>' +
           '<div class="am-mn-pie"><span class="am-mn-pl p4">' + esc(P ? P.tot.p4 : '') + ' platos de 4</span><span class="am-mn-pl p3">' + esc(P ? P.tot.p3 : '') + ' de 3</span><span class="am-mn-pl p2">' + esc(P ? P.tot.p2 : '') + ' de 2</span>' +
           '<span class="am-mn-boda">' + esc(txt(e.boda)) + ' · ' + esc(fechaCorta(e.fecha)) + (e.hora ? ' · ' + esc(e.hora) : '') + '</span></div>';
         // Detrás: tareas + minuta + especiales
-        const b = tarjeta('dorso'); tra.push(b.t);
+        const b = tarjeta('dorso' + (mnFolio ? ' folio' : '')); tra.push(b.t);
         b.i.innerHTML = '<div class="am-mn-cab"><b>' + esc(txt(p.cam.nombre).toUpperCase()) + '</b><span>' + esc(txt(e.boda)) + ' · ' + esc(fechaCorta(e.fecha)) + '</span></div><div class="am-mn-cuerpo"></div>';
         b.t._p = p;
 
       });
       // colocar en el DOM para poder medir
+      if (mnFolio) {
+        // Un folio por persona: hoja 1 = plano, hoja 2 = dorso (en doble cara salen en el mismo papel)
+        del.forEach(function (t, k) { hoja(hojas, [t], 1); hojas.lastChild.classList.add('cara-a'); hoja(hojas, [tra[k]], 1); hojas.lastChild.classList.add('cara-b'); });
+      } else {
       hoja(hojas, del.slice());
       if (mnDoble) {
         const espejo = [];
@@ -1092,6 +1115,7 @@
         const hs = Array.prototype.slice.call(hojas.children), n = hs.length / 2;
         hojas.innerHTML = ''; for (let k = 0; k < n; k++) { hojas.appendChild(hs[k]); hs[k].classList.add('cara-a'); hojas.appendChild(hs[k + n]); hs[k + n].classList.add('cara-b'); }
       } else hoja(hojas, tra);
+      }
       del.forEach(function (t) {
         const zona = t.querySelector('.am-mn-plano'); if (!P) { zona.innerHTML = '<div class="am-vacio">Sin plano</div>'; return; }
         const alto = t.querySelector('.am-mn-in').clientHeight - t.querySelector('.am-mn-cab').offsetHeight - t.querySelector('.am-mn-pie').offsetHeight - (P.ley ? 0 : 0) - 6;
@@ -1103,7 +1127,20 @@
         cuerpo.style.height = (t.querySelector('.am-mn-in').clientHeight - t.querySelector('.am-mn-cab').offsetHeight - 4) + 'px';
         const f = p.idx >= 0 && fichas[p.idx] ? sinControles(fichas[p.idx].cloneNode(true)) : null;
         const minuta = mc ? mc.cloneNode(true) : null; if (minuta) minuta.classList.add('am-mn-compacto');
-        apilar(cuerpo, [f ? { nodo: f, ancho: 760, fijo: true } : null, minuta ? { nodo: minuta, ancho: 380, max: 1.25 } : null, { nodo: especialesNota(e) || document.createElement('div'), ancho: 380, max: 1.25 }]);
+        let sinFicha = null;
+        if (!f) { try { sinFicha = document.createElement('div'); sinFicha.className = 'ts-card'; sinFicha.innerHTML = tsHojaHtml(e, p.cam); } catch (err) { sinFicha = null; } }
+        if (mnFolio) {
+          // Arriba: minuta | comensales y menús especiales · Abajo: sus tareas
+          const fila = document.createElement('div'); fila.className = 'am-mn-fila';
+          const c1 = document.createElement('div'); c1.className = 'am-mn-col'; if (minuta) c1.appendChild(minuta);
+          const c2 = document.createElement('div'); c2.className = 'am-mn-col'; c2.appendChild(comensalesNodo(e));
+          fila.appendChild(c1); fila.appendChild(c2);
+          const tit = document.createElement('div'); tit.className = 'am-mn-com-t'; tit.textContent = 'MIS TAREAS';
+          const tareas = document.createElement('div'); tareas.appendChild(tit); tareas.appendChild(f || sinFicha || document.createElement('div'));
+          apilar(cuerpo, [{ nodo: fila, ancho: 760, max: 1 }, { nodo: tareas, ancho: 760, fijo: true, max: 1 }]);
+        } else {
+          apilar(cuerpo, [f ? { nodo: f, ancho: 760, fijo: true } : (sinFicha ? { nodo: sinFicha, ancho: 380, max: 1.25 } : null), minuta ? { nodo: minuta, ancho: 380, max: 1.25 } : null, { nodo: especialesNota(e) || document.createElement('div'), ancho: 380, max: 1.25 }]);
+        }
       });
     } else if (mnModo === 'boda') {
       let mb = null;
@@ -1127,6 +1164,7 @@
   }
   window.amMnModo = function (m) { mnModo = m; renderMinutas(); };
   window.amMnDoble = function (v) { mnDoble = !!v; renderMinutas(); };
+  window.amMnFolio = function (v) { mnFolio = !!v; renderMinutas(); };
   window.amMnPers = function (id, v) { mnSel[id] = !!v; renderMinutas(); };
   window.amMnCopias = function (k, v) { mnCopias[k] = Math.max(0, parseInt(v, 10) || 0); renderMinutas(); };
   window.amMnImprimir = function () {
@@ -1592,7 +1630,7 @@
     h += '<div class="am-ctl-kpis"><div class="am-ctl-kpi ok"><span>BODAS EN TOTAL</span><b>' + l.length + '</b></div><div class="am-ctl-kpi"><span>PRÓXIMAS</span><b>' + prox + '</b></div><div class="am-ctl-kpi"><span>CELEBRADAS</span><b>' + (l.length - prox) + '</b></div></div>';
     h += '<div class="am-fila"><input class="am-buscar" placeholder="Buscar por boda o lugar" value="' + esc(mbFiltro) + '" oninput="amMbFiltro(this.value)"><select class="am-buscar" style="max-width:160px" onchange="amMbAnio(this.value)"><option value="">Todos los años</option>' +
       anios.map(function (a) { return '<option' + (a === mbAnio ? ' selected' : '') + '>' + a + '</option>'; }).join('') + '</select></div>';
-    h += '<div class="am-bloque am-sinpad"><table class="am-tabla"><thead><tr><th>Fecha</th><th>Boda</th><th>Lugar</th><th>Mi función</th><th>Equipo · zona</th><th class="am-c">Estado</th><th></th></tr></thead><tbody>';
+    h += '<div class="am-bloque am-sinpad"><table class="am-tabla"><thead><tr><th>Fecha</th><th>Boda</th><th>Lugar</th><th>Mi función</th><th>Equipo · rango</th><th class="am-c">Estado</th><th></th></tr></thead><tbody>';
     if (!vis.length) h += '<tr><td colspan="7" class="am-vacio">' + (l.length ? 'Sin resultados.' : 'Todavía no apareces en ninguna boda. Tu nombre de usuario tiene que coincidir con el del Listado de personal; si no te salen tus bodas, avisa a gestión.') + '</td></tr>';
     vis.forEach(function (x) {
       const futura = x.e.fecha >= hoy;

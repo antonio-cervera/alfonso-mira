@@ -320,18 +320,30 @@
         .ts-grid { display: grid; grid-template-columns: 1fr; gap: 16px; max-width: 1100px; margin: 16px auto 0; }
         .ts-card { break-inside: avoid; page-break-inside: avoid; }
         .ts-card { background: #FFF; border: 2px solid #111; }
+        .rb-kpis { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+        .rb-kpi { border: 1px solid #E5E7EB; border-top: 4px solid #1F2937; border-radius: 8px; padding: 6px 8px; text-align: center; background: #FFF; }
+        .rb-kpi span { display: block; font-size: 10px; font-weight: 900; color: #6B7280; letter-spacing: .05em; }
+        .rb-kpi b { display: block; font-size: 22px; font-weight: 900; color: #111827; line-height: 1.1; }
+        .rb-kpi small { display: block; font-size: 9px; color: #9CA3AF; }
+        .rb-kpi-nota { font-size: 10px; color: #9CA3AF; margin-top: 4px; }
+        @media (max-width: 640px) { .rb-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+        .ts-hoja { border-top: 2px solid #111; padding: 4px 6px; font-size: 11px; }
+        .ts-hoja-t { font-weight: 900; font-size: 11px; color: #1C4587; margin-bottom: 2px; }
+        .ts-hoja-f { display: flex; gap: 6px; align-items: baseline; font-weight: 700; line-height: 1.35; }
+        .ts-hoja-f span { font-size: 9px; font-weight: 900; padding: 0 4px; border-radius: 3px; color: #1F2937; flex: 0 0 auto; }
+        .ts-hoja-v { color: #9CA3AF; font-weight: 600; }
         .ts-tab { width: 100%; border-collapse: collapse; table-layout: fixed; font-size: 10.5px; }
-        .ts-tab td { border: 1px solid #111; height: 24px; padding: 0; vertical-align: middle; }
-        .ts-lbl { font-weight: 900; padding: 0 6px !important; color: #111; }
-        .ts-head { color: #FFF; font-weight: 900; text-align: center; font-size: 12px; letter-spacing: .05em; }
-        .ts-nombre { background: #FFFF00; font-weight: 900; text-align: center; color: #111; }
-        .ts-cols td { background: #434343; color: #FFF; font-weight: 900; text-align: center; height: 20px; }
-        .ts-c { color: #111; }
+        .ts-tab td { border: 1px solid #1F1B16; height: 24px; padding: 0; vertical-align: middle; }
+        .ts-lbl { font-weight: 900; padding: 0 6px !important; color: #1F1B16; }
+        .ts-head { color: #fff; font-weight: 900; text-align: center; font-size: 12px; letter-spacing: .05em; }
+        .ts-nombre { background: #C48A1E; font-weight: 900; text-align: center; color: #1F1B16; }
+        .ts-cols td { background: #4A443A; color: #fff; font-weight: 900; text-align: center; height: 20px; }
+        .ts-c { color: #1F1B16; }
         .ts-txt { display: block; padding: 1px 5px; font-weight: 700; line-height: 1.15; }
-        .ts-amar { background: #FFE599; min-height: 24px; display: flex; align-items: center; }
+        .ts-amar { background: #F2D98F; min-height: 24px; display: flex; align-items: center; }
         .ts-limpieza { text-align: center; font-weight: 800; font-size: 10px; }
-        .ts-sel { width: 100%; height: 26px; border: none; outline: none; background: #FEF9C3; font-size: 10.5px; font-weight: 700; padding: 0 4px; cursor: pointer; color: #111; }
-        .ts-sel:focus { box-shadow: 0 0 0 2px #4F46E5 inset; }
+        .ts-sel { width: 100%; height: 26px; border: none; outline: none; background: #FBF3DA; font-size: 10.5px; font-weight: 700; padding: 0 4px; cursor: pointer; color: #1F1B16; }
+        .ts-sel:focus { box-shadow: 0 0 0 2px #7E9A68 inset; }
         /* Informe de la boda */
         .inf-wrap { max-width: 1200px; margin: 0 auto; }
         .inf-cab { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; background: linear-gradient(135deg, #2C4120, #3F5A2E); color: #fff; border-radius: 14px; padding: 18px 22px; margin-bottom: 16px; }
@@ -459,13 +471,13 @@
         @media print { body * { visibility:hidden !important; } #seating-a4-sheet,#seating-a4-sheet * { visibility:visible !important; } #seating-a4-sheet { position:absolute;left:0;top:0;width:210mm;min-height:297mm;box-shadow:none;border:none; } }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="tema-colores.css?v=1795607087">
-    <link rel="stylesheet" href="tema.css?v=1795607087">
-    <link rel="stylesheet" href="tw.css?v=1795607087">
+    <link rel="stylesheet" href="tema-colores.css?v=1795701914">
+    <link rel="stylesheet" href="tema.css?v=1795701914">
+    <link rel="stylesheet" href="tw.css?v=1795701914">
 </head>
 <body class="h-screen w-screen flex flex-row">
-    <script src="firebase-config.js?v=1795607087"></script>
-    <script src="puente.js?v=1795607087"></script>
+    <script src="firebase-config.js?v=1795701914"></script>
+    <script src="puente.js?v=1795701914"></script>
 
     <!-- DATALISTS PARA MATERIALES -->
     <datalist id="dl-manteleria-art"><option value="MANTELES CASA"></option><option value="MANTELES ALQUILER"></option><option value="CUBREMANTEL CASA"></option><option value="CUBREMANTEL ALQUILER"></option><option value="SERVILLETAS CASA"></option><option value="SERVILLETAS ALQUILER"></option><option value="LITOS"></option></datalist>
@@ -630,7 +642,7 @@
                                     <th class="w-1/6">RESPONSABILIDAD</th>
                                     <th class="w-1/6">EQUIPO</th>
                                     <th class="w-1/6">OCUPACIÓN</th>
-                                    <th class="w-40 min-w-[170px] text-center">ZONA</th>
+                                    <th class="w-40 min-w-[170px] text-center">RANGO</th>
                                     <th class="min-w-[230px]">SERVICIO CÓCTEL</th>
                                     <th class="w-20 text-center">ENTRADA</th>
                                     <th class="w-20 text-center">SALIDA</th>
@@ -827,7 +839,7 @@
         <div id="view-plano" class="w-full h-full hidden flex-col overflow-y-auto p-8 custom-scrollbar bg-gray-200 relative">
             <div class="bg-white border border-gray-300 rounded-lg p-1.5 flex gap-2 w-fit mx-auto mb-4 shadow-sm z-20">
                 <button onclick="switchPlanoMode('principal')" id="btn-mode-principal" class="px-4 py-2 rounded-md font-bold text-sm bg-indigo-600 text-white shadow-sm transition">Plano Principal</button>
-                <button onclick="switchPlanoMode('camareros')" id="btn-mode-camareros" class="px-4 py-2 rounded-md font-bold text-sm text-gray-600 hover:bg-gray-100 transition">Plano Camareros (Zonas)</button>
+                <button onclick="switchPlanoMode('camareros')" id="btn-mode-camareros" class="px-4 py-2 rounded-md font-bold text-sm text-gray-600 hover:bg-gray-100 transition">Plano Camareros (Rangos)</button>
                 <button onclick="switchPlanoMode('seating')" id="btn-mode-seating" class="px-4 py-2 rounded-md font-bold text-sm text-gray-600 hover:bg-gray-100 transition">Seating Boda</button>
             </div>
 
@@ -1105,7 +1117,7 @@
     <!-- MODAL SELECCIONAR ZONA (Para Plano Camareros) -->
     <div id="modal-zona" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center backdrop-blur-sm">
         <div class="bg-white rounded-2xl shadow-2xl p-6 w-80 transform transition-all text-center">
-            <h2 class="text-xl font-black text-gray-800 mb-4">Asignar Zona a Mesa</h2>
+            <h2 class="text-xl font-black text-gray-800 mb-4">Asignar Rango a Mesa</h2>
             <div class="grid grid-cols-3 gap-2 mb-6">
                 <!-- 4 zonas x 3 subzonas -->
                 <button onclick="saveMesaZona('1.1')" class="zona-btn-11 h-11 rounded-lg font-black shadow hover:scale-105 transition">1.1</button>
@@ -1202,29 +1214,29 @@
 
         // Zonas de camareros: 4 zonas x 3 subzonas. Cada zona tiene su color y dos tonos más claros.
         const ZONE_COLORS = {
-            '1.1': { bg: '#facc15', text: '#1f2937', name: 'Zona 1.1' },
-            '1.2': { bg: '#fde68a', text: '#1f2937', name: 'Zona 1.2' },
-            '1.3': { bg: '#fef9c3', text: '#1f2937', name: 'Zona 1.3' },
-            '2.1': { bg: '#2563eb', text: 'white',   name: 'Zona 2.1' },
-            '2.2': { bg: '#60a5fa', text: '#0f172a', name: 'Zona 2.2' },
-            '2.3': { bg: '#bfdbfe', text: '#0f172a', name: 'Zona 2.3' },
-            '3.1': { bg: '#16a34a', text: 'white',   name: 'Zona 3.1' },
-            '3.2': { bg: '#4ade80', text: '#052e16', name: 'Zona 3.2' },
-            '3.3': { bg: '#bbf7d0', text: '#052e16', name: 'Zona 3.3' },
-            '4.1': { bg: '#db2777', text: 'white',   name: 'Zona 4.1' },
-            '4.2': { bg: '#f472b6', text: '#500724', name: 'Zona 4.2' },
-            '4.3': { bg: '#fbcfe8', text: '#500724', name: 'Zona 4.3' },
+            '1.1': { bg: '#facc15', text: '#1f2937', name: 'Rango 1.1' },
+            '1.2': { bg: '#fde68a', text: '#1f2937', name: 'Rango 1.2' },
+            '1.3': { bg: '#fef9c3', text: '#1f2937', name: 'Rango 1.3' },
+            '2.1': { bg: '#2563eb', text: 'white',   name: 'Rango 2.1' },
+            '2.2': { bg: '#60a5fa', text: '#0f172a', name: 'Rango 2.2' },
+            '2.3': { bg: '#bfdbfe', text: '#0f172a', name: 'Rango 2.3' },
+            '3.1': { bg: '#16a34a', text: 'white',   name: 'Rango 3.1' },
+            '3.2': { bg: '#4ade80', text: '#052e16', name: 'Rango 3.2' },
+            '3.3': { bg: '#bbf7d0', text: '#052e16', name: 'Rango 3.3' },
+            '4.1': { bg: '#db2777', text: 'white',   name: 'Rango 4.1' },
+            '4.2': { bg: '#f472b6', text: '#500724', name: 'Rango 4.2' },
+            '4.3': { bg: '#fbcfe8', text: '#500724', name: 'Rango 4.3' },
             // Zonas antiguas (1-10): solo para que las bodas ya guardadas se sigan viendo
-            1: { bg: '#3b82f6', text: 'white', name: 'Zona 1 (antigua)' },
-            2: { bg: '#84cc16', text: 'white', name: 'Zona 2 (antigua)' },
-            3: { bg: '#f97316', text: 'white', name: 'Zona 3 (antigua)' },
-            4: { bg: '#fcd34d', text: '#1f2937', name: 'Zona 4 (antigua)' },
-            5: { bg: '#a855f7', text: 'white', name: 'Zona 5 (antigua)' },
-            6: { bg: '#ec4899', text: 'white', name: 'Zona 6 (antigua)' },
-            7: { bg: '#06b6d4', text: 'white', name: 'Zona 7 (antigua)' },
-            8: { bg: '#f43f5e', text: 'white', name: 'Zona 8 (antigua)' },
-            9: { bg: '#14b8a6', text: 'white', name: 'Zona 9 (antigua)' },
-            10: { bg: '#6366f1', text: 'white', name: 'Zona 10 (antigua)' }
+            1: { bg: '#3b82f6', text: 'white', name: 'Rango 1 (antigua)' },
+            2: { bg: '#84cc16', text: 'white', name: 'Rango 2 (antigua)' },
+            3: { bg: '#f97316', text: 'white', name: 'Rango 3 (antigua)' },
+            4: { bg: '#fcd34d', text: '#1f2937', name: 'Rango 4 (antigua)' },
+            5: { bg: '#a855f7', text: 'white', name: 'Rango 5 (antigua)' },
+            6: { bg: '#ec4899', text: 'white', name: 'Rango 6 (antigua)' },
+            7: { bg: '#06b6d4', text: 'white', name: 'Rango 7 (antigua)' },
+            8: { bg: '#f43f5e', text: 'white', name: 'Rango 8 (antigua)' },
+            9: { bg: '#14b8a6', text: 'white', name: 'Rango 9 (antigua)' },
+            10: { bg: '#6366f1', text: 'white', name: 'Rango 10 (antigua)' }
         };
         const ZONE_ORDER = ['1.1', '1.2', '1.3', '2.1', '2.2', '2.3', '3.1', '3.2', '3.3', '4.1', '4.2', '4.3'];
 
@@ -3938,6 +3950,56 @@
         }
 
         // ==========================================
+        // TAREAS DE CADA CAMARERO SACADAS DE LA HOJA DE EQUIPO
+        // Busca su nombre en TAREAS INDIVIDUALIZADAS DE SERVICIO y POSTSERVICIO y en SERVICIO CÓCTEL del listado.
+        // ==========================================
+        const TS_HOJA_POST = [['PRIMER GOLPE BARRA LIBRE', 'primer_golpe'], ['LIMPIEZA CAFETERA Y GRANIZADORA', 'cafetera'], ['LIMPIEZA CAFÉ Y CENICEROS', 'cafe_ceniceros'], ['RECOGER OFFICE Y CONSUMOS', 'office'], ['VACIADO DE BOTELLEROS (CATERING)', 'cat_botelleros'], ['CLASIFICAR CAJAS DE BOTELLINES (CATERING)', 'cat_botellines'], ['LIMPIEZA Y CLASIFICACIÓN/CONTABILIZACIÓN CUBIERTOS', 'cubiertos'], ['RECOGER CÓCTEL Y CONSUMO', 'coctel'], ['RECOGER DECORACIÓN Y CONTABILIZAR MANTELERÍA', 'deco_manteleria'], ['RECOGER SALA Y CONSUMO', 'sala'], ['REPOSICIÓN DE BOTELLEROS (JARDINES LAVID)', 'jlv_botelleros'], ['CLASIFICAR BOTELLINES DEL PATIO (JARDINES LAVID)', 'jlv_botellines'], ['CARGA Y DESCARGA', 'carga'], ['MONTAJE EVENTO', 'montaje_evento'], ['MONTAJE MESÓN Y/O COMEDOR', 'montaje_meson']];
+        const TS_HOJA_MESA = [['RECEPCIÓN INVITADOS A SALA', 'ts_recepcion_sala'], ['BRINDIS EN MESA', 'ts_brindis_mesa'], ['PREPARACIÓN CAFÉ (FRÍO Y CALIENTE)', 'ts_cafe'], ['COMANDA PESCADO', 'ts_comanda_pescado']];
+        function tsNorm(s) {
+            const t = String(s == null ? '' : s).toUpperCase().normalize('NFD');
+            let o = '';
+            for (let i = 0; i < t.length; i++) { const c = t.charCodeAt(i); if (c >= 0x300 && c <= 0x36f) continue; o += ('.,;:()'.indexOf(t[i]) >= 0) ? ' ' : t[i]; }
+            return o.split(' ').filter(Boolean).join(' ');
+        }
+        // Trozos de una casilla con varios nombres: «ANA Y LUIS», «ANA, LUIS», «ANA / LUIS», «ANA + LUIS»
+        function tsTrozos(v) {
+            let partes = [String(v == null ? '' : v)];
+            [',', '/', '+', ';', '\n', ' - ', ' Y ', ' y ', ' E ', ' e '].forEach(sep => { partes = [].concat.apply([], partes.map(p => p.split(sep))); });
+            return partes.map(tsNorm).filter(Boolean);
+        }
+        // ¿La casilla nombra a este camarero? Nombre completo, o parte del nombre si solo encaja con él
+        function tsNombraA(v, cam, todos) {
+            const yo = tsNorm(cam.nombre); if (!yo) return false;
+            const misPal = yo.split(' ');
+            return tsTrozos(v).some(tr => {
+                if (tr === yo) return true;
+                const pal = tr.split(' ');
+                const encaja = n => { const w = tsNorm(n).split(' '); return pal.every(x => w.indexOf(x) >= 0); };
+                if (!pal.every(x => misPal.indexOf(x) >= 0)) return false;
+                if (todos.some(c => c !== cam && tsNorm(c.nombre) === tr)) return false;
+                return todos.filter(c => jswHasName(c) && encaja(c.nombre)).length === 1;
+            });
+        }
+        function tsTareasHoja(ev, cam) {
+            const m = ev.jefesala_manual || {}, todos = (ev.camareros || []).filter(jswHasName), out = [];
+            const sc = normJsw(cam.servicio_coctel);
+            if (sc && sc !== '-') out.push({ f: 'CÓCTEL', t: sc });
+            for (let i = 1; i <= 10; i++) if (m['ts_func_' + i] && tsNombraA(m['ts_nombre_' + i], cam, todos)) out.push({ f: 'CÓCTEL', t: normJsw(m['ts_func_' + i]) });
+            TS_HOJA_MESA.forEach(r => { if (tsNombraA(m[r[1]], cam, todos)) out.push({ f: 'SERVICIO', t: r[0] }); });
+            TS_HOJA_POST.forEach(r => {
+                let resp = false, esta = false;
+                for (let i = 0; i < 6; i++) if (tsNombraA(m['tp_' + r[1] + '_' + i], cam, todos)) { esta = true; if (i === 0) resp = true; }
+                if (esta) out.push({ f: 'POSTSERVICIO', t: r[0] + (resp ? ' (RESPONSABLE)' : '') });
+            });
+            return out;
+        }
+        function tsHojaHtml(ev, cam) {
+            const l = tsTareasHoja(ev, cam);
+            const col = { 'CÓCTEL': '#93C47D', 'SERVICIO': '#F1C232', 'POSTSERVICIO': '#EA9999' };
+            return `<div class="ts-hoja"><div class="ts-hoja-t">TAREAS ASIGNADAS EN LA HOJA DE EQUIPO</div>${l.length ? l.map(x => `<div class="ts-hoja-f"><span style="background:${col[x.f]}">${x.f}</span>${escJsw(x.t)}</div>`).join('') : '<div class="ts-hoja-f ts-hoja-v">Sin tareas con su nombre en la hoja de equipo.</div>'}</div>`;
+        }
+
+        // ==========================================
         // TAREAS INDIVIDUALIZADAS DE POSTSERVICIO (todas las pestañas, se rellena a mano en JEFE SALA)
         // ==========================================
         function jnPostservicioCells(m) {
@@ -3994,8 +4056,8 @@
                 + jnGrid(jnPostservicioCells(m));
             root.innerHTML = equipoRealizadaMarkup('jefesala') + `
                 <div class="max-w-[1100px] mx-auto mb-3 flex items-center justify-between">
-                    <h2 class="text-2xl font-black text-[#1F2937] uppercase tracking-wide"><i class="fa-solid fa-clipboard-list text-[#4F46E5] mr-2"></i> Jefe Sala - Coordinador/a</h2>
-                    <div class="flex items-center gap-2 text-xs font-bold text-[#6B7280]"><span class="inline-block w-4 h-4 border border-[#9CA3AF]" style="background:#FEF9C3"></span> Rellenar a mano <span class="inline-block w-4 h-4 border border-[#9CA3AF] ml-3 bg-white"></span> Automático</div>
+                    <h2 class="text-2xl font-black text-gray-800 uppercase tracking-wide"><i class="fa-solid fa-clipboard-list text-indigo-600 mr-2"></i> Jefe Sala - Coordinador/a</h2>
+                    <div class="flex items-center gap-2 text-xs font-bold text-gray-500"><span class="inline-block w-4 h-4 border border-gray-400" style="background:#FBF3DA"></span> Rellenar a mano <span class="inline-block w-4 h-4 border border-gray-400 ml-3 bg-white"></span> Automático</div>
                 </div>` + grid;
         }
 
@@ -4007,7 +4069,7 @@
             const root = document.getElementById('jsw-root-' + tabId);
             if (!root) return;
             if (!currentEventId || !appData.events[currentEventId]) {
-                root.innerHTML = `<div class="p-10 text-center text-[#9CA3AF] font-bold">Abre o crea un registro para ver esta hoja.</div>`;
+                root.innerHTML = `<div class="p-10 text-center text-gray-400 font-bold">Abre o crea un registro para ver esta hoja.</div>`;
                 return;
             }
             const ev = appData.events[currentEventId];
@@ -4025,8 +4087,8 @@
             } finally { JSW_RO = false; }
             root.innerHTML = equipoRealizadaMarkup(tabId) + `
                 <div class="max-w-[1100px] mx-auto mb-3 flex items-center justify-between">
-                    <h2 class="text-2xl font-black text-[#1F2937] uppercase tracking-wide"><i class="fa-solid fa-clipboard-list text-[#4F46E5] mr-2"></i> ${JSW_REPLICAS[tabId] || ''}</h2>
-                    <div class="text-xs font-bold text-[#6B7280]"><i class="fa-solid fa-link mr-1"></i> Se rellena en JEFE SALA-COORDINADOR/A</div>
+                    <h2 class="text-2xl font-black text-gray-800 uppercase tracking-wide"><i class="fa-solid fa-clipboard-list text-indigo-600 mr-2"></i> ${JSW_REPLICAS[tabId] || ''}</h2>
+                    <div class="text-xs font-bold text-gray-500"><i class="fa-solid fa-link mr-1"></i> Se rellena en JEFE SALA-COORDINADOR/A</div>
                 </div>` + html;
         }
         const PRT_RECETAS = {"APERITIVOS CÓCTEL": ["Ceviche de gamba y corvina en lima", "Cucharita de carpaccio de Roast Beef con tomate confitado, piñones y mostaza verde", "Aceitunas variadas y sus aceites con encurtidos", "Airbag de mojama y crema de escalivada", "Almejas de carril, concha fina, ostras y sus maridajes", "Brioche de foie, manzana y frutos rojos", "Bocaditos de presa ibérica con crema queso y compota de manzana", "Bolitas caseras (morcilla, pollo y bacalao)", "Bolitas caseras de jamón ibérico", "Botellita de gazpacho", "Botellita de gazpacho de cereza", "Botellita salmorejo", "Brandada de bacalao con pimiento confitado y tapena de de oliva negra", "Brocheta de atún con ajetes y tomates secos", "Brocheta de atún con albahaca y tomate cherry", "Brocheta de atún de ijada con ajetes y tomate seco", "Brocheta de atún de ijada con soja", "Brocheta de atún escabechado con tomate seco y ajetes tiernos", "Brocheta de atún escabechado con tomate seco y albahaca", "Brocheta de gamba en suquet", "Brocheta de mozzarela y tomatito cherry", "Brocheta de palmito, piña y salmón", "Brocheta de salmón sashimi, crema de yogourt y manzana granny smith", "Brotes tiernos con langostinos, mango y vinagreta de pistacho", "Chips de verduras con guacamole y queso chili", "Coca de atún con tomate confitado y polvo de hueva", "Coca de bacalao, tomate y crema de alcachofa", "Coca de molletes con morcilla y tomate confitado", "Coca de molletes, tartar de atún, Cherry confitado y queso trufado", "Coca de ventresca de atún, beicon y cebolla caramelizada", "Crema de pepino, tomate escabechado, mejillón y pico de gallo", "Crema de pularda con trufa, setas y chips de verduras", "Crujiente de alga nori con tartar de atún", "Cucharita de atún con aguacate y turrón IGP Turrón de Jijona", "Cucharita de bacalao, mango, gel cítrico y chili", "Cucharita de bacalao al perfume de ajo", "Cucharita de calamar, chistorra y miel de sobrasada", "Cucharita de ceviche de gamba, corvina, mango y aguacate", "Cucharita de corvina, gel cítrico, mango y chili", "Cucharita de ensaladillita de merluza y frutos del mar", "Cucharita de pastel de mero con salsa de bogavante", "Cucharitas de calamar con chistorra y calabacín", "Cucurucho de ensaladilla de merluza y gambas", "Cucuruchos de salazón con almendras", "Delicias de Elche", "Ensaladilla de pulpo, manzana, cebolla y champiñon", "Foie  rebozado en cacao, crema de almendra y galleta salada", "Foie con breva, kikos y pistachos con gelatina de frutos rojos", "Foie y quicos sobre tosta de pan de frutas y dulce de higo", "Gazpachito con pepino y mojama", "Gazpachito con virutas de jamón y albahaca", "Gazpachito de sandía", "Gazpachito de tomate, sandía y salazón", "Gazpacho de cereza con tomate y dado de bonito a media sal", "Hojaldre de verduras con queso, bacon y tomate", "Lingote de foie y quicos sobre tosta de pan de frutas y dulce de higo", "Marinera", "Mortadela italiana de Bolonia trufada, grisines y regañás", "Pan cristal con ventresca, pimiento y emulsión de aceite", "Pan de cristal con anchoa del Cantábrico, tomate y polvo de aceituna", "Pan de cristal con tomate y anchoa", "Pan de cristal con ventresca de atún, pimiento confitado  y espuma de aceite", "Rollito de salmón con crema de queso, cebollino, tomate y encurtidos", "Rosbeef de ternera con vinagreta de manzana, cebolla roja y mostaza dulce", "Salmorejo con salazones y queso de cabra", "Salmorejo con virutas de huevo y jamón", "Semiesfera de nispero de Callosa de Sarriá con crema de queso azul y nueces", "Tataki de presa, chipotle y piñones", "Tosta de foie, alcachofas y huevos de codorniz", "Tosta de foie, pistacho y frutos rojos", "Tosta de frutas con foie crocanti y dulce de higos", "Tosta de higado de pato con manzana y reduccion de PX", "Vasito de tomate en texturas, queso y su helado", "Vasito de alcachofa, pepinillo, atún y jamón cocido", "Vasito de brotes tiernos con langostino en tempura, parmesano y mahonesa picante", "Vasito de picada de alcachofa, jamón cocido, atún y espuma de aceite de oliva", "Cucharita de presa ibérica con tomate confitado, mostaza verde y piñones", "Bocaditos de presa ibérica con crema queso y compota de manzana", "Bolitas caseras (pollo, jamón y bacalao)", "Bolitas caseras de jamón ibérico", "Bolitas de carabineros con mayonesa de wasabi", "Bolitas de chipirón con ali-oli de azafrán", "Bolitas de jamón ibérico y boletus", "Bolitas de jamón y mayonesa de boletus", "Bolitas de jamón, boletus y bacalao", "Bolitas de perdiz escabechada y manzana con mayonesa de chocolate", "Bolitas de txistorra, queso y mayonesa de manzana asada", "Brocheta de atún de ijada con soja", "Brocheta de atún escabechado con tomate seco y ajetes tiernos", "Brocheta de atún escabechado con tomate seco y albahaca", "Brocheta de gamba en suquet", "Brocheta de pollo con salsa barbacoa y curry", "Brocheta de pollo crujiente con salsa de cacahuete", "Brocheta de pulpo gratinado y patata confitada", "Brocheta de rape, aceituna negra y alioli de azafrán", "Brocheta de secreto ibérico con cebolla caramelizada y mojo picón", "Brocheta de solomillo ibérico con jamón y pimienta", "Brochetas de pollo al curry con sésamo negro", "Buñuelo de bacalao con alioli de tinta de calamar", "Calabacín en tempura con romescú", "Canutillos rellenos de rabo de toro en su jugo", "Caramelitos de queso brie con dátil y dulce de tomate", "Cigarritos crujientes de morcilla manzana", "Croquetitas artesanas de espinacas y queso", "Croquetitas caseras de jamón", "Crujiente de pollo kellogs con salsa barbacoa y curry", "Crujientes de pollo, queso y sobrasada de miel", "Cucharita de bacalao en tempura con alioli de tinta de calamar", "Cucharita de gamba y gulas al ajillo", "Cucharitas de secreto ibérico con mojo picón y cebolla caramelizada", "Cucuruchos de boquerón crujiente relleno de espinacas", "Cucuruchos de gambitas rebozadas a la andaluza", "Cucuruchos de rabas de calamar a la andaluza", "Delicias de Elche", "Hojaldre de verduras con queso, bacon y tomate", "Huevos a baja temperatura con boniato y anchoa", "Mini bikini de jamón york y queso trufado", "Mini bocadito tortilla con guacamole", "Mini caramelo de queso brie con dátil y dulce de tomate", "Mini hamburguesa de toro americano, chedar, pimiento confitado y mostaza de pepinillo", "Mini hamburguesa ibérica con crema de pepinillo", "Minibocaditos de lomo, morcilla y queso", "Minihamburguesa de lomo ibérico con cebolla caramelizada y salsa teriyaki", "Minihamburguesas de buey con queso brie, cebolla caramelizada y mayonesa de piquillos confitados", "Minipan bao con carrillera estofada y mayonesa de salsa Hoisin", "Palmera de rabas de calamar", "Palmeras de boquerones crujientes rellenos de espinacas", "Piruletas de solomillo ibérico, jamón y salsa de trufa con boletus", "Pirulís de codorniz con frutos rojos", "Saquito de chistorra y queso Brie", "Saquito de chistorra y queso provolone", "Saquito de morcilla y molleja de cordero", "Saquito de sepia, verdurita y gamba", "Saquitos relleno de rabo de toro en su jugo", "Saquitos rellenos de marisco y verduritas", "Taco de verdura con cola de gamba en tempura y mahonesa kimchi", "Tartaletas de habitas baby, con jamón y foïe", "Tempura de verduras y salsa romescu", "Tortitas de camarón con alioli de erizo de mar", "Verduritas en tempura con salsa romescu", "Vieiras gratinadas en cama de verduras"], "SHOW COOKING CÓCTEL": ["Aceitunas variadas y sus aceites con encurtidos", "Aperitivos del Vermut (con almendras, patatas chips, aceitunas y gildas)", "Rincon del Vermut (con almendras, patatas chips, aceitunas y gildas) + Conservas (Navajas, berberecho y mejillones)", "Almejas de carril, Concha fina, Ostras y sus maridajes", "Buffet de quesos (6) y embutidos artesanos del Vinalopó con panecillos y dulces de fruta", "Buffet Gourmet Experience de quesos Nacionales e Internacionales (+20) con panecillos y dulces de fruta", "Corte al momento de Mortadela italiana de Bolonia con cremoso trufado, grisines y regañás", "Ibéricos y embutidos al corte", "Jamón ibérico al corte, con cortador profesional", "Mesa buffet de salazones y ahumados", "Mesa buffet japonés (sushi tempura roll, makis y niguiris)", "Steak tartar en crujiente de yuca y patata violeta", "Tacos de lechuga, cola de gamba en tempura y mahonesa kimchi", "Tartares, ceviches y tatakis (corvina, atún, pez limón, salmón)", "Tatakis de atún con soja, wasabi y sésamo", "Calamares a la andaluza con mayonesa de lima", "Cazuelitas de arroz meloso del senyoret con alioli de tinta de calamar", "Crujientes de pollo, queso y sobrasada miel", "Crujiente de patata con jamón ibérico y huevo de codorniz", "Hogaza con sobrasada y huevos de codorniz", "Huevos de codorniz con foie y alcachofa", "Mesa andaluza (cazon en adobo, calamar y gambusí)", "Minibocaditos de lomo, morcilla y queso", "Miniquesadillas, burritos mexicanos y ceviches", "Palmeras de boquerones crujientes rellenos de espinacas", "Pulpeira: pulpo, patata, aceite de oliva virgen extra y pimenton de la vera", "Pulpo a la brasa", "Tartaletas de chorizo, huevos de codorniz y pimientos asados", "Tortitas de camaron con alioli de erizo de mar"], "ENTRANTES O PRIMEROS": ["Ravioli de pato con setas, boletus y caviar de vino tinto", "Brotes tiernos con bacalao, mango y aguacate", "Brotes tiernos con langostinos, mango y vinagreta de pistacho", "Brotes tiernos con salmón marinado, Granny Smith, piñones garrapiñados y salsa de yogourt", "Carpaccio de atún, papada, pisto y molletes", "Carpaccio de bacalao confitado, aguacate, mango y huevas de trucha", "Carpaccio de alcachofa confitada, lomo ibérico y lascas de parmesano", "Carpaccio de mosaico gamba", "Carpaccio de presa ibérica con tomate confitado, piñones y mostaza verde", "Carpaccio de rosbeef de ternera con manzana, cebolla roja y mostaza dulce", "Cilindro de foie con pistacho y dulce de higo", "Cilindro de foie, con pistacho y frutos rojos", "Coca de picaña con parmesano, tomate confitado y rucula", "Crema de pularda con trufa, setas y chips de verduras", "Delicias de pato con All i pebre", "Ensalada de brotes con pollo crujiente, vinagreta de mostaza y miel", "Ensaladilla rusa con tartar de atún picante", "Foie con membrillo y pistachos", "Marisco hervido", "Hígado de pato con pan de frutas, manzana y mermelada de higos", "Jamón ibérico al corte con pan de cristal", "Jamón ibérico al corte y lomo ibérico", "Jamón ibérico y queso curado", "Láminas de bacalao con gel cítrico, mango y chili", "Lingote de foie y turrón IGP Turrón de Jijona con mermelada de frambuesa", "Lingote de foie, turrón y praliné de avellana", "Milhoja de berenjena con albahaca, chorizo, provolone y tomate", "Milhoja de berenjena con salmón y tomate", "Milhoja de berenjena con tomate y queso cheddar", "Milhoja de berenjera con queso de cabra, salmón y tomate", "Milhoja de foie y manzana caramelizada con dulce de tomate y frutos rojos", "Mousse de foie sobre tosta con cebolla caramelizada y dulce de mora", "Pastel de cabracho, tallarines de calamar y salsa tartara de gambas con encurtidos y wakame", "Pastel de pescado, bacalao marinado y picada de tomate aromatizado", "Pepino, apio y manzana", "Pimientos de piquilo relleno de bacalao al pil pil", "Plumcake de oliva negra con bacalao y mantequilla de anchoa", "Plumcake de oliva negra con jamón y mantequilla de anchoa", "Plumcake de oliva negra con salmón y mantequilla de anchoa", "Presa ibérica con encurtidos y escabeche de frutas", "Rosbeef de ternera con corteza de cerdo, vinagreta de tartufo y encurtidos", "Rosbeef de ternera con manzana, cebolla morada y falsa mostaza", "Salmón marinado con carpaccio de pulpo y vinagreta de huevas de arenque con sus brotes", "Salteado de calamar, vieiras, habitas y aceite de tartufo", "Salteado de lecheritas con ajetes y pimiento confitado", "Tartar de atún con aguacate, salmón y teja de parmesano", "Tartar de salmón con tomate, aguacate y crema de pepinillo", "Tartar de salmón sashimi con tápenas, cebolleta y mostaza verde", "Tataki de presa con chimichurri", "Timbal de aguacate con txangurro y sorbete de limón", "Timbal de atún con mango y aguacate", "Timbal de ensaladilla de merluza con huevas de arenque", "Timbal de pastel de pescado con láminas de bacalao, picada de tomate y polvo de aceituna negra", "Timbal de patata confitada, calamar, ajetes tiernos y habitas baby", "Timbal de salmón con aguacate, teja de parmesano y mostaza dulce", "Tosta de higado de pato con manzana y reducción de px", "Alcachofa confitada, velo de panceta ibérica, yema y tartufo", "Alcachofa a la brasa, huevo y parmesano", "Alcachofa rellena de foie y gambas", "Alcachofa rellena de verduras y gambas gratinadas", "Bacalao en tempura de tinte de calamar con alioli", "Brioche de carrillera duxelle de setas y tartufo", "Buñuelo de bacalao con crema de tinta de calamar", "Burrumballa crujiente con bacalao y patata paja", "Canelon de pulpo con crema de gambas y chips de espinacas", "Canelón de jarrete de ternera con salsa de Oporto y setas", "Canelón de pato con foïe, setas y chips de verduras", "Canelón de rabo de toro con salsa de su guiso, parmentier de patata trufada y chips de batata", "Canelón de verdura y langostinos con crema de marisco", "Canutillos rellenos de rabo de toro en su jugo", "Caramelo crujiente de Camembert con dátil y dulce de tomate", "Carpaccio de alcachofa confitada, lomo ibérico y lascas de parmesano", "Coca de patata y pulpo gratinado con espuma de ajo-aceite", "Crema de pularda con trufa, setas y chips de verduras", "Crep de jarrete de ternera con salsa de oporto", "Crep de verduras asadas y gambas", "Crujiente de boquerón relleno de espinacas (2 unds)", "Crujiente de burrumballa con morcilla, alcachofas y virutas de jamón", "Crujiente de burrumballa de alcachofas con setas de foie", "Crujiente de patata con gula y gamba ala ajillo", "Crujiente de patata con jamón ibérico y huevo de codorniz", "Delicia de hojaldre con pato y copos de parmesano", "Ensalada de beicon, setas y parmesano", "Gamba roja a la plancha", "Hígado de pato con pan de frutas, manzana y mermelada de higos", "Hojaldre de pato con setas y queso gratinado", "Hojaldre de brandada de bacalao con pimiento confitado", "Hojaldre relleno de confit de pato y boletus con parmesano", "Huevo a baja temperatura con alcachofa, foie y patata", "Huevo a baja temperatura con boletus, foie y oporto", "Huevo a baja temperatura con chanquetes y pisto de verduras", "Huevo a baja temperatura con chistorra, baicon y patata", "Huevo a baja temperatura con setas y foïe", "Huevo a baja temperatura con sobrasada, chips de patatata y queso de Mahón", "Huevo a baja temperatura, espuma y chips de patata con jamón ibérico", "Huevos de codorniz con crujiente de patata y jamón ibérico", "Huevos rotos con bacalao, cebolla y patata", "Lasaña crujiente de vaca con bechamel y  chipotle", "Lecheritas de cordero con queso de cabra y láminas de jamón de pato", "Merlucitos en tempura con salsa tártara", "Milhoja de berenjena con albahaca, chorizo, provolone y tomate", "Milhoja de berenjena con queso de cabra, salmón y tomate", "Milhoja de berenjena con salmón y tomate", "Milhoja de berenjena con tomate y queso cheddar", "Milhoja de berenjera con queso de cabra, salmón y tomate", "Milhoja de pulpo gratinado al horno y patata confitada", "Milhoja de vieiras con calamar, habitas baby y aceite de tartufo", "Molleja de ternera braseada con parmentier y pimiento confitado", "Peloticas en salsa Oporto y setas de temporada", "Pimientos de piquilo relleno de bacalao al pil pil", "Pulpo a la brasa, espuma de patata y tomate", "Pulpo crujiente con patata rateff, sobrasada y avellana", "Rollito de cordero con cebolla caramelizada y foïe", "Salteado de calamar, vieiras, habitas y aceite de tartufo", "Terrina de cebolla tierna con rizo de gambas, espárrgos y virutas de mojama", "Timbal de patata confitada, calamar, ajetes tiernos y habitas baby", "Tosta de higado de pato con manzana y reducción de px", "Vieira gratinada en cama de verduras", "Arroz meloso de bacalao con patata, tomate y garbanzos", "Arroz meloso de presa ibérica, setas y pimiento", "Arroz meloso con tallarines de calamar y atún", "Arroz de rabo de toro, judias verdes y coliflor", "Arroz meloso de pulpo con ali-oli de su tinta", "Arroz meloso de verduras rape y almejas", "Arroz meloso de verduras de temporada", "Arroz de bogavante", "Arroz de conejo y caracoles", "Arroz de presa ibérica con setas y caracoles", "Brotes tiernos con langostinos, mango y vinagreta de pistacho", "Brotes tiernos con salmón marinado, Granny Smith, piñones garrapiñados y salsa de yogourt", "Brotes tiernos con txangurrro, merluza y su pilpil con polvo de aceituna negra", "Brotes tiernos de salmón, piña manzana y vinagreta de frutos rojos", "Brotes tiernos y timbal de aguacate con ventresca de atún y anchoa", "Carpaccio de atún con papada, pisto y molletes", "Crema de almendra con gamba blanca", "Crema de pepino, tomate escabechado, mejillón y pico de gallo", "Crema de pularda con trufa, setas y chips de verduras", "Ensalada de bacon con setas y parmesano", "Ensalada de brotes con pollo crujiente, vinagreta de mostaza y miel", "Ensalada de langostinos con parmesano y mahonesa picante", "Ensalada de salmón con manzana Granny Smith, piñones garrapiñados y crema de yogurt", "Mosaico de carpaccio de gamba, aguacate y mango", "Mousse de pimiento, atún a media sal, molletes y esferas de aceite de albahaca", "Pastel de cabracho, tallarines de calamar y salsa tártara de gambas con encurtidos y wakame", "Ravioli de pato con setas, boletus y caviar de vino tinto", "Ravioli de rabo de toro, parmentier y boletus", "Timbal de aguacate con txangurro y sobete de limón", "Tartar de atún picante con ensaladilla rusa", "Timbal de atún con mango y aguacate", "Timbal de salmón con aguacate, teja de parmesano y mostaza", "Tomate en texturas con su helado y cremoso de queso"], "SORBETE": ["Sorbete de mojito", "Sorbete de naranja", "Sorbete de mandarina", "Sorbete de limon"], "PRINCIPAL": ["Abanico a la brasa con patata deluxe y pimiento confitado", "Carrillera de ternera, tomate confitado, pastel de guisantes y puré de coliflor tostada", "Cochinillo al horno al estilo tradicional Segoviano con patata y pimiento asado", "Cochinillo en su jugo con puré de patata, boniato y crujiente de verduras", "Cordero a 65º con piel tostada de berenjena , café y mollejas de cordero", "Costilla de lbérica a baja temperatura con parmentier de apio nabo y barbacoa", "Jarrete de ternera en su jugo con patata y pimiento", "Jarrete de ternera lechal con puré de castañas y orejones", "Lomo a baja temperatura, boniato, pimientos confitados, reducción de Oporto y chips de patata violeta", "Lomo ibérico con cebolla caramelizada y oporto", "Lomo ibérico a baja temperatura con crema de calabaza, verduras y pimiento confitado y patata", "Lomo a baja temperatura con pisto de verduras, permentier de patata y Oporto", "Medallón de carrillera con tomates confitados, pure de patata y mostaza dulce", "Paletilla de cabrito en su jugo con patata panadera", "Papada crujiente, parmentier de patata trufada y salsa BBQ", "Popietas de secreto ibérico asado a baja temperatura con berenjena, arrope de pimientos y chips de remolacha", "Presa con mostaza dulce y calabaza en tempura", "Solomillo de ternera con foie, oporto y setas", "Solomillo de ternera a la brasa con pimiento confitado y buñuelo de patata", "Solomillo de cerdo ibérico, cebolletas caramelizadas, crema de boletus y jugo de guiso de verduras", "Solomillo ibérico con jugo de pimientos y crema de foie y trufa", "Solomillo ibérico Joselito con cebolla caramelizada y Oporto", "Terrina de cordero asado a baja temperatura en su jugo con patata y pimiento confitado", "Tournedó de solomillo ibérico con pimienta", "Bacalao a 65º de pisto de verduras y parmentier de patata", "Bacalao ajoarriero, verduras salteadas con ajetes tiernos y espuma de patata", "Bacalao al perfume de ajo y crema de gambas con crujiente de espinacas", "Bacalao al pilpil con verdura y txangurro", "Bacalao con callos, crema de verduras y judías", "Bacalao con pisto de verdura, parmentier de patatas y crujiente de su piel", "Bacalao al pil pil de esparragos, mojama y salsa romesco", "Bacalao confitado, parmentier de ajo negro y espuma de txistorra", "Cilindro de dorada con azafrán y curry relleno de verduras y gambas", "Corvina asada concrema de verduras, salteados de calamar y ajetes", "Dorada rellena de ajetes tiernos, gambas con crema de marisco y calamar", "Lubina con carpaccio de gambas en suquet, crujiente de arroz en su tinta y alioli de ajo negro", "Lomo de corvina con crema de azafran, calamar y espárragos", "Merluza al horno tomate confitado, encurtidos y espuma de aceite", "Popietas de lenguado rellena de espinacas", "Rodaballo con salsa de almendras"], "POSTRE": ["Bizcocho poroso con helados de turrón y horchata a la crema inglesa de pasas", "Brownie de chocolate, helado de turrón y espuma de turrón IGP Jijona", "Carpaccio de piña con frutas de temporada y helado de leche", "Frutos rojos, cremoso de chocolate blanco, helado de leche y algodón", "Gel cítrico con macedonia de frutas y helado de temporada con espuma de petit suisse de fresa", "Granada de Elche, helado de frambuesa y espuma de yogur con cookies", "Lágrimas de naranja y su helado con espuma de caramelo de naranja", "Milhoja de crema pastelera con chocolate y helado de leche", "Souffle de chocolate con helado de vainilla", "Tarta de dulce de leche al horno con helado de leche fresca", "Tarta de queso con helado de frambuesa", "Tarta de chocolate al horno con helado de galleta María", "Tartita de manzana con helado de mantecado", "Torrija caramelizada con chocolate y helado de leche", "Torrija caramelizada con helado de galleta lottus", "Torrija caramelizada con lemon grass y helado de vainilla"]};
@@ -5046,11 +5108,11 @@
             const a = zonaKey(actual);
             let h = `<option value="-" ${a ? '' : 'selected'}>-</option>`;
             [1, 2, 3, 4].forEach(z => {
-                h += `<optgroup label="ZONA ${z}">`;
-                [1, 2, 3].forEach(s => { const k = `${z}.${s}`; h += `<option value="${k}" ${a === k ? 'selected' : ''} style="background:${ZONE_COLORS[k].bg};color:${ZONE_COLORS[k].text};">ZONA ${k}</option>`; });
+                h += `<optgroup label="RANGO ${z}">`;
+                [1, 2, 3].forEach(s => { const k = `${z}.${s}`; h += `<option value="${k}" ${a === k ? 'selected' : ''} style="background:${ZONE_COLORS[k].bg};color:${ZONE_COLORS[k].text};">RANGO ${k}</option>`; });
                 h += '</optgroup>';
             });
-            if (a && ZONE_ORDER.indexOf(a) < 0) h += `<option value="${escapeHtml(a)}" selected>ZONA ${escapeHtml(a)} (ANT.)</option>`;
+            if (a && ZONE_ORDER.indexOf(a) < 0) h += `<option value="${escapeHtml(a)}" selected>RANGO ${escapeHtml(a)} (ANT.)</option>`;
             return h;
         }
         function zonaSelectStyle(v) { const c = ZONE_COLORS[zonaKey(v)]; return c ? `background:${c.bg};color:${c.text};border-color:${c.bg};` : ''; }
@@ -5184,6 +5246,24 @@
             document.execCommand('insertHTML', false, tmp.innerHTML);
             rbGuardar();
         }
+        // Comensales del plano: los cadetes van dentro de «adultos» de cada mesa (ocupan plaza), aquí se separan
+        function rbComensales(ev) {
+            const r = { adultos: 0, cadetes: 0, staff: 0, ninos: 0, tronas: 0, mesas: 0 };
+            (ev.items || []).forEach(i => {
+                if (i.entity !== 'mesa') return;
+                const a = parseInt(i.adultos) || 0, c = parseInt(i.cadetes) || 0;
+                r.mesas++;
+                if (i.isStaff) r.staff += a; else { r.cadetes += c; r.adultos += Math.max(0, a - c); }
+                r.ninos += parseInt(i.ninos) || 0; r.tronas += parseInt(i.tronas) || 0;
+            });
+            r.pax = r.adultos + r.cadetes + r.staff + r.ninos;
+            return r;
+        }
+        function rbComensalesHtml(ev) {
+            const r = rbComensales(ev);
+            const k = (l, v, bg, sub) => `<div class="rb-kpi" style="border-top-color:${bg}"><span>${l}</span><b>${v}</b>${sub ? `<small>${sub}</small>` : ''}</div>`;
+            return `<div class="rb-kpis">${k('PAX', r.pax, '#2C4120', 'total comensales')}${k('ADULTOS', r.adultos, '#7E9A68')}${k('CADETES', r.cadetes, '#8C7050')}${k('STAFF', r.staff, '#7A7163')}${k('NIÑOS', r.ninos, '#3F5A2E')}${k('TRONAS', r.tronas, '#B5651D')}</div><p class="rb-kpi-nota">Datos del PLANO (${r.mesas} mesas). Se actualizan solos.</p>`;
+        }
         function renderResumenBoda(root, ev) {
             const html = ev.documentos_extra.resumen_boda || '';
             const b = (ico, title, accion) => `<button type="button" title="${title}" onmousedown="event.preventDefault()" onclick="${accion}" class="rb-btn">${ico}</button>`;
@@ -5192,6 +5272,7 @@
                 <div class="bg-white border rounded-t-xl shadow-sm px-6 pt-5 pb-3">
                     <h2 class="text-xl font-black text-gray-800 uppercase"><i class="fa-solid fa-file-lines text-indigo-600 mr-2"></i>RESUMEN BODA · ${escapeHtml(rbNombre(ev))}</h2>
                     <p class="text-xs text-gray-500 mt-1">Documento libre: escribe, añade títulos, listas, tablas y colores. Se guarda automáticamente.</p>
+                    ${rbComensalesHtml(ev)}
                 </div>
                 <div class="rb-toolbar">
                     ${b('<i class="fa-solid fa-rotate-left"></i>', 'Deshacer', "rbCmd('undo')")}${b('<i class="fa-solid fa-rotate-right"></i>', 'Rehacer', "rbCmd('redo')")}${sep}
@@ -5305,17 +5386,18 @@
                     <table class="ts-tab">
                         <colgroup><col style="width:23%"><col style="width:20%"><col style="width:33%"><col style="width:24%"></colgroup>
                         <tr><td class="ts-lbl">ROL:</td><td class="ts-c" colspan="2"><div class="flex items-center justify-between pr-2"><span class="ts-txt"><b>${escJsw(equipo)}${leader ? ' · JEFE/A DE EQUIPO' : ''}</b></span>${jswSuffix(cam)}</div></td><td class="ts-head" style="background:${color};">${beb ? 'BEBIDAS' : 'COMIDAS'}</td></tr>
-                        <tr><td class="ts-lbl">NOMBRE:</td><td class="ts-c ts-nombre">${escJsw(String(cam.nombre).trim())}</td><td class="ts-c" colspan="2"><span class="ts-txt"><b>COMPAÑERO/S:</b> ${comp.length ? escJsw(comp.join(', ')) : '<span style="color:#9CA3AF;">— (misma zona y ocupación en Listado Personal)</span>'}</span></td></tr>
+                        <tr><td class="ts-lbl">NOMBRE:</td><td class="ts-c ts-nombre">${escJsw(String(cam.nombre).trim())}</td><td class="ts-c" colspan="2"><span class="ts-txt"><b>COMPAÑERO/S:</b> ${comp.length ? escJsw(comp.join(', ')) : '<span style="color:#9CA3AF;">— (mismo rango y ocupación en Listado Personal)</span>'}</span></td></tr>
                         <tr class="ts-cols"><td>PRE.:</td><td>CÓCTEL:</td><td>SERVICIO:</td><td>POSTSERVICIO:</td></tr>
                         ${filas}
                     </table>
+                    ${tsHojaHtml(ev, cam)}
                 </div>`;
             }).join('');
 
             root.innerHTML = `
                 <div class="max-w-[1100px] mx-auto mb-3 flex items-center justify-between">
                     <h2 class="text-2xl font-black text-[#1F2937] uppercase tracking-wide"><i class="fa-solid fa-list-check text-[#4F46E5] mr-2"></i> Tareas Servicio</h2>
-                    <div class="text-xs font-bold text-[#6B7280]"><i class="fa-solid fa-link mr-1"></i> Camareros, zonas y compañeros desde LISTADO PERSONAL</div>
+                    <div class="text-xs font-bold text-[#6B7280]"><i class="fa-solid fa-link mr-1"></i> Camareros, rangos y compañeros desde LISTADO PERSONAL</div>
                 </div>
                 <div class="jsw-grid">${jswEquiposCells(ev)}</div>
                 ${lista.length ? `<div class="ts-grid">${fichas}</div>` : '<div class="max-w-[1100px] mx-auto mt-4 bg-white border rounded-xl p-8 text-center text-[#9CA3AF] font-bold">No hay camareros asignados a los equipos en LISTADO PERSONAL.</div>'}`;
@@ -6350,11 +6432,11 @@
                 const resp = [['JEFE/A SALA', 'Jefe/a de sala'], ['COORDINADOR/A', 'Coordinador/a']];
                 resp.forEach(r => { if (!jswNames(ev, r[0])) add('bad', `Falta asignar ${r[1]} en el Listado Personal.`); });
                 const sinZona = cams.filter(c => ['COMIDA', 'BEBIDA'].includes(normJsw(c.ocupacion)) && !ZONE_COLORS[zonaKey(c.zona)]);
-                if (sinZona.length) add('warn', `${sinZona.length} camareros sin zona válida: ${sinZona.map(c => c.nombre).join(', ')}.`); else add('ok', 'Todos los camareros de comida y bebida tienen zona.');
+                if (sinZona.length) add('warn', `${sinZona.length} camareros sin rango válido: ${sinZona.map(c => c.nombre).join(', ')}.`); else add('ok', 'Todos los camareros de comida y bebida tienen rango.');
                 const sinHorario = cams.filter(c => !c.entrada || !c.salida);
                 if (sinHorario.length) add('warn', `${sinHorario.length} personas sin hora de entrada o salida.`);
                 const legacy = cams.filter(c => zonaKey(c.zona) && ZONE_ORDER.indexOf(zonaKey(c.zona)) < 0);
-                if (legacy.length) add('warn', `${legacy.length} personas con zona antigua (1-10): asígnales su subzona nueva.`);
+                if (legacy.length) add('warn', `${legacy.length} personas con rango antiguo (1-10): asígnales su rango nuevo.`);
             }
             // Pedido material
             const ped = (ev.documentos_extra && ev.documentos_extra.pedido_material && ev.documentos_extra.pedido_material.rows) || [];
@@ -6382,7 +6464,7 @@
             const m = ev.jefesala_manual || {};
             // Datos clave
             const dato = (l, v) => `<div class="inf-dato"><span>${l}</span><b>${escapeHtml(v || '—')}</b></div>`;
-            let h = `<div class="inf-kpis">${infKpi('INVITADOS', tot.invitados, `${tot.adultos} adultos · ${tot.ninos} niños · ${tot.staff} staff`)}${infKpi('MESAS', mesas.length)}${infKpi('MENÚS ESPECIALES', persEsp, cajas.length ? `${cajas.length} cuadros` : '')}${infKpi('PERSONAL', cams.length, `${jswCountCamareros(ev)} camareros`)}</div>`;
+            let h = `<div class="inf-kpis">${infKpi('PAX', rbComensales(ev).pax, (r => `${r.adultos} adultos · ${r.cadetes} cadetes · ${r.staff} staff · ${r.ninos} niños · ${r.tronas} tronas`)(rbComensales(ev)))}${infKpi('MESAS', mesas.length)}${infKpi('MENÚS ESPECIALES', persEsp, cajas.length ? `${cajas.length} cuadros` : '')}${infKpi('PERSONAL', cams.length, `${jswCountCamareros(ev)} camareros`)}</div>`;
             h += infCard('DATOS DEL EVENTO', `<div class="inf-datos">${dato('Novios', getMinutaNombre(ev))}${dato('Fecha', evFecha(ev))}${dato('Hora servicio', ev.hora)}${dato('Lugar', ev.ubicacion)}${dato('Tipo de evento', m.evento)}${dato('Ubicación', m.ubicacion)}${dato('Coordinador/a', jswNames(ev, 'COORDINADOR/A'))}${dato('Jefe/a de sala', jswNames(ev, 'JEFE/A SALA'))}${dato('Briefing', m.briefing)}${dato('Hora ceremonia', m.ig_hora_ceremonia)}${dato('Resopó', [p.res_tipo, p.res_hora].filter(Boolean).join(' · '))}${dato('Barra libre', [p.bl_modalidad || m.nbl_modalidad, m.nbl_horas ? m.nbl_horas + ' h' : ''].filter(Boolean).join(' · '))}</div>`, 'fa-champagne-glasses');
             // Semáforo
             const av = infAvisos(ev);
@@ -6478,7 +6560,7 @@
                 <div><h4 class="inf-h4">CONSUMOS POR SECTOR</h4>${infBarras(top.map(x => ({ l: x.l, v: x.v, c: x.c || '#F59E0B' })), infEur)}</div></div>`;
             // Personal: horas, importe y valoración
             const valor = nombre => { const out = { b: [], m: [] }; Object.keys(EVAL_DEF).forEach(kind => (s[`${kind}_equipo_filas`] || []).forEach(f => { if (f.nombre === nombre) { if (String(f.fortaleza || '').trim()) out.b.push(f.fortaleza); if (String(f.mejora || '').trim()) out.m.push(f.mejora); } })); return out; };
-            const personal = cams.length ? `<table class="inf-tab"><tr><th>NOMBRE</th><th>EQUIPO</th><th>OCUPACIÓN / ZONA</th><th class="c">HORAS</th><th class="c">IMPORTE</th><th>VALORACIÓN</th></tr>${cams.map(c => { const v = valor(String(c.nombre).trim()); return `<tr><td><b>${escapeHtml(c.nombre)}</b><div class="inf-peq">${escapeHtml(c.responsabilidad || '')}</div></td><td>${escapeHtml(c.equipo || '')}</td><td>${escapeHtml([c.ocupacion, zonaKey(c.zona)].filter(x => x && x !== '-').join(' · '))}</td><td class="c">${infHorasCam(c) ? infMin(infHorasCam(c)) : '—'}</td><td class="c">${infEur(c.importe)}</td><td class="inf-peq">${v.b.map(x => `<span style="color:#3F5A2E">▲ ${escapeHtml(x)}</span>`).join('<br>')}${v.b.length && v.m.length ? '<br>' : ''}${v.m.map(x => `<span style="color:#B3471E">▼ ${escapeHtml(x)}</span>`).join('<br>')}${!v.b.length && !v.m.length ? '—' : ''}</td></tr>`; }).join('')}</table>` : '<p class="inf-vacio">Sin personal.</p>';
+            const personal = cams.length ? `<table class="inf-tab"><tr><th>NOMBRE</th><th>EQUIPO</th><th>OCUPACIÓN / RANGO</th><th class="c">HORAS</th><th class="c">IMPORTE</th><th>VALORACIÓN</th></tr>${cams.map(c => { const v = valor(String(c.nombre).trim()); return `<tr><td><b>${escapeHtml(c.nombre)}</b><div class="inf-peq">${escapeHtml(c.responsabilidad || '')}</div></td><td>${escapeHtml(c.equipo || '')}</td><td>${escapeHtml([c.ocupacion, zonaKey(c.zona)].filter(x => x && x !== '-').join(' · '))}</td><td class="c">${infHorasCam(c) ? infMin(infHorasCam(c)) : '—'}</td><td class="c">${infEur(c.importe)}</td><td class="inf-peq">${v.b.map(x => `<span style="color:#3F5A2E">▲ ${escapeHtml(x)}</span>`).join('<br>')}${v.b.length && v.m.length ? '<br>' : ''}${v.m.map(x => `<span style="color:#B3471E">▼ ${escapeHtml(x)}</span>`).join('<br>')}${!v.b.length && !v.m.length ? '—' : ''}</td></tr>`; }).join('')}</table>` : '<p class="inf-vacio">Sin personal.</p>';
 
             let h = `<div class="inf-kpis">${infKpi('CUMPLIMIENTO CHECK LISTS', cumMedio + '%', `${sumH} de ${sumT} casillas`, colorPct(cumMedio))}${infKpi('FORTALEZAS', bien.length, 'anotadas en evaluaciones', '#3F5A2E')}${infKpi('A MEJORAR', mal.length, 'puntos y observaciones', '#B3471E')}${infKpi('COSTE POR COMENSAL', comensales ? infEur(costeTotal / comensales) : '—', infEur(costeTotal) + ' en total', '#9E3D18')}</div>`;
             h += infCard('CUMPLIMIENTO DE LOS CHECK LISTS', tablaCum, 'fa-list-check');
@@ -7034,8 +7116,8 @@
             pzImprimirBloques(bloques);
         }
     </script>
-    <script src="ficha_campos.js?v=1795607087"></script>
-    <script src="mejoras.js?v=1795607087"></script>
+    <script src="ficha_campos.js?v=1795701914"></script>
+    <script src="mejoras.js?v=1795701914"></script>
     <!-- Acceso (Firebase) -->
     <div id="nb-capa" class="nb-capa">
         <div id="nb-carga" class="nb-tarjeta">
@@ -7063,7 +7145,7 @@
     </div>
     <div id="nb-modal" class="nb-modal nb-oculto"><div id="nb-modal-caja" class="nb-modal-caja"></div></div>
 
-    <script type="module" src="nube.js?v=1795607087"></script>
+    <script type="module" src="nube.js?v=1795701914"></script>
     <script>if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function (e) { console.warn('Sin modo offline', e); }); }); }</script>
 </body>
 </html>

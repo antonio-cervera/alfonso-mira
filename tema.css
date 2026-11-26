@@ -498,3 +498,21 @@ body.rol-admin .am-solo-equipo, body.rol-gestor .am-solo-equipo { display: none 
   #protocolo-root, #jefesala-root, [id^="jsw-root-"], [id^="eval-root-"], #menesp-root { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   #protocolo-root .prt-grid, #jefesala-root .jsw-grid, [id^="jsw-root-"] .jsw-grid, [id^="eval-root-"] .min-h-full > *, #menesp-root > * { min-width: 760px; }
 }
+/* Minutas: un folio por persona (A4) */
+.am-hoja.am-hoja-1 { grid-template-columns: 210mm; grid-template-rows: 297mm; }
+.am-mn.folio { width: 210mm; height: 297mm; padding: 8mm; }
+.am-mn.folio .am-mn-cab { font-size: 13px; padding-bottom: 2mm; margin-bottom: 3mm; }
+.am-mn.folio .am-mn-cab b { font-size: 18px; }
+.am-mn.folio .am-mn-pie { font-size: 11px; }
+.am-mn-fila { display: flex; gap: 14px; align-items: flex-start; }
+.am-mn-col { flex: 1 1 0; min-width: 0; }
+.am-mn-com { font-size: 12px; color: #1F1B16; }
+.am-mn-com-t { font-weight: 900; font-size: 13px; color: #3F5A2E; border-bottom: 2px solid #3F5A2E; margin: 6px 0 5px; letter-spacing: .04em; }
+.am-mn-com-k { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+.am-mn-com-k div { border: 1px solid #D8D0C0; border-radius: 6px; text-align: center; padding: 3px 2px; }
+.am-mn-com-k span { display: block; font-size: 9px; font-weight: 800; color: #7A7163; }
+.am-mn-com-k b { display: block; font-size: 18px; font-weight: 900; line-height: 1.1; }
+.am-mn-com-tab { width: 100%; border-collapse: collapse; font-size: 11px; }
+.am-mn-com-tab th { background: #3F5A2E; color: #fff; font-size: 9px; padding: 2px 4px; text-align: left; }
+.am-mn-com-tab td { border-bottom: 1px solid #E5DFD2; padding: 2px 4px; vertical-align: top; }
+.am-mn-com-v { color: #9A9180; font-style: italic; }
