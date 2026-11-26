@@ -520,3 +520,12 @@ body.rol-admin .am-solo-equipo, body.rol-gestor .am-solo-equipo { display: none 
 #plano-rangos { display: flex; flex-wrap: wrap; gap: 8px; }
 #plano-rangos.hidden { display: none; }
 #plano-rangos .zone-card { position: static; flex: 1 1 160px; cursor: default; box-shadow: none; }
+/* «Ver como»: el administrador revisa la app con otro rol */
+.nb-menu-vercomo { display: none; text-align: left; padding: 9px 12px; border-radius: 8px; font-size: 13px; font-weight: 600; color: #E6DFD1; }
+.nb-menu-vercomo:hover { background: var(--am-menu2); }
+.nb-menu-vercomo i { width: 22px; }
+body.rol-real-admin .nb-menu-vercomo { display: block; }
+body.am-viendo-como .nb-menu-usuarios { display: none !important; }
+.am-vercomo-barra { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 9999; background: #C48A1E; color: #1F1B16; font-size: 13px; font-weight: 600; padding: 8px 10px 8px 14px; border-radius: 99px; box-shadow: 0 6px 20px rgba(0,0,0,.25); display: flex; gap: 8px; align-items: center; white-space: nowrap; max-width: calc(100vw - 20px); overflow-x: auto; }
+.am-vercomo-barra button { background: #1F1B16; color: #fff; border-radius: 99px; padding: 4px 10px; font-size: 12px; font-weight: 700; }
+@media print { .am-vercomo-barra { display: none !important; } }

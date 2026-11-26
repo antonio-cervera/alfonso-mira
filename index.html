@@ -471,13 +471,13 @@
         @media print { body * { visibility:hidden !important; } #seating-a4-sheet,#seating-a4-sheet * { visibility:visible !important; } #seating-a4-sheet { position:absolute;left:0;top:0;width:210mm;min-height:297mm;box-shadow:none;border:none; } }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="tema-colores.css?v=1795703214">
-    <link rel="stylesheet" href="tema.css?v=1795703214">
-    <link rel="stylesheet" href="tw.css?v=1795703214">
+    <link rel="stylesheet" href="tema-colores.css?v=1795704063">
+    <link rel="stylesheet" href="tema.css?v=1795704063">
+    <link rel="stylesheet" href="tw.css?v=1795704063">
 </head>
 <body class="h-screen w-screen flex flex-row">
-    <script src="firebase-config.js?v=1795703214"></script>
-    <script src="puente.js?v=1795703214"></script>
+    <script src="firebase-config.js?v=1795704063"></script>
+    <script src="puente.js?v=1795704063"></script>
 
     <!-- DATALISTS PARA MATERIALES -->
     <datalist id="dl-manteleria-art"><option value="MANTELES CASA"></option><option value="MANTELES ALQUILER"></option><option value="CUBREMANTEL CASA"></option><option value="CUBREMANTEL ALQUILER"></option><option value="SERVILLETAS CASA"></option><option value="SERVILLETAS ALQUILER"></option><option value="LITOS"></option></datalist>
@@ -557,6 +557,7 @@
         <div class="nb-pie">
             <div id="nb-nube" class="nb-nube"><i></i><span>Conectando…</span></div>
             <button data-nb="usuarios" class="nb-menu-usuarios"><i class="fa-solid fa-users-gear"></i> USUARIOS</button>
+            <button data-nb="vercomo" class="nb-menu-vercomo"><i class="fa-solid fa-user-secret"></i> VER COMO…</button>
             <div class="nb-usuario">
                 <div id="nb-u-avatar" class="nb-avatar">·</div>
                 <div class="nb-u-datos"><div id="nb-u-nombre" class="nb-u-nombre"></div><div id="nb-u-rol" class="nb-u-rol"></div></div>
@@ -7119,8 +7120,8 @@
             pzImprimirBloques(bloques);
         }
     </script>
-    <script src="ficha_campos.js?v=1795703214"></script>
-    <script src="mejoras.js?v=1795703214"></script>
+    <script src="ficha_campos.js?v=1795704063"></script>
+    <script src="mejoras.js?v=1795704063"></script>
     <!-- Acceso (Firebase) -->
     <div id="nb-capa" class="nb-capa">
         <div id="nb-carga" class="nb-tarjeta">
@@ -7148,7 +7149,7 @@
     </div>
     <div id="nb-modal" class="nb-modal nb-oculto"><div id="nb-modal-caja" class="nb-modal-caja"></div></div>
 
-    <script type="module" src="nube.js?v=1795703214"></script>
+    <script type="module" src="nube.js?v=1795704063"></script>
     <script>if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function (e) { console.warn('Sin modo offline', e); }); }); }</script>
 </body>
 </html>

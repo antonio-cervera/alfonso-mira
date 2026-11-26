@@ -42,7 +42,13 @@ function esc(v) {
     .split('"').join('&quot;').split("'").join('&#39;');
 }
 function mayus(v) { return String(v || '').trim().toUpperCase(); }
-function rol() { return S.perfil ? S.perfil.rol : ''; }
+// «Ver como»: el administrador revisa la app con los permisos de otro rol (y, si hace falta, como una persona del listado)
+let VER = null;
+try { VER = JSON.parse(localStorage.getItem('am_ver_como') || 'null'); } catch (e) { VER = null; }
+function rolReal() { return S.perfil ? S.perfil.rol : ''; }
+function viendoComo() { return rolReal() === 'admin' && VER && ROLES[VER.rol] && VER.rol !== 'admin' && VER.rol !== 'pendiente'; }
+function rol() { return viendoComo() ? VER.rol : rolReal(); }
+function nombreVista() { return viendoComo() && VER.nombre ? VER.nombre : (S.perfil ? S.perfil.nombre : ''); }
 function puedePlanificar() { return ROLES_PLAN.indexOf(rol()) >= 0; }
 function puedeEditar() { return ROLES_EDITAN.indexOf(rol()) >= 0; }
 // Coordinadores, camareros y cocina solo ven las bodas en las que aparecen en el LISTADO DE PERSONAL
@@ -53,7 +59,7 @@ function palabras(t) {
 }
 function esSuya(ev) {
   if (ROLES_SOLO_SUYAS.indexOf(rol()) < 0) return true;
-  const yo = palabras(S.perfil && S.perfil.nombre);
+  const yo = palabras(nombreVista());
   if (!yo.length) return false;
   return (ev && ev.camareros || []).some(function (c) {
     const p = palabras(c && c.nombre);
@@ -300,7 +306,7 @@ window.__backend = {
 window.__am = {
   rol: function () { return rol(); },
   uid: function () { return S.user ? S.user.uid : ''; },
-  nombre: function () { return S.perfil ? S.perfil.nombre : ''; },
+  nombre: function () { return nombreVista(); },
   puedePlanificar: puedePlanificar, puedeEditar: puedeEditar, esAdmin: esAdmin, aviso: aviso,
   leer: async function (col, id) { const s = await getDoc(doc(db, col, id)); return s.exists() ? s.data() : null; },
   guardar: async function (col, id, datos, sustituir) {
@@ -395,7 +401,43 @@ $('nb-olvido').addEventListener('click', function () {
 document.addEventListener('click', function (e) {
   if (e.target.closest('[data-nb="salir"]')) signOut(auth).then(function () { location.reload(); });
   if (e.target.closest('[data-nb="usuarios"]')) abrirUsuarios();
+  if (e.target.closest('[data-nb="vercomo"]')) abrirVerComo();
+  if (e.target.closest('[data-nb="vercomo-salir"]')) { try { localStorage.removeItem('am_ver_como'); } catch (er) {} location.reload(); }
 });
+
+// Nombres del LISTADO DE PERSONAL de todas las bodas cargadas (para elegir a quién simular)
+function nombresListado() {
+  const vistos = {}, out = [];
+  try {
+    Object.keys(appData.events || {}).forEach(function (k) {
+      (appData.events[k].camareros || []).forEach(function (c) {
+        const n = String(c && c.nombre || '').trim().toUpperCase();
+        if (n && !vistos[n]) { vistos[n] = 1; out.push(n); }
+      });
+    });
+  } catch (e) {}
+  return out.sort();
+}
+function abrirVerComo() {
+  if (rolReal() !== 'admin') return;
+  const m = $('nb-modal');
+  m.classList.remove('nb-oculto');
+  const op = ['gestor', 'jefesala', 'coordinador', 'cocina', 'camarero'].map(function (r) { return '<option value="' + r + '"' + (VER && VER.rol === r ? ' selected' : '') + '>' + ROLES[r] + '</option>'; }).join('');
+  const lista = nombresListado().map(function (n) { return '<option value="' + esc(n) + '"></option>'; }).join('');
+  $('nb-modal-caja').innerHTML = '<div class="nb-cab"><h2>Ver como…</h2><button class="nb-x" data-nb-cerrar>✕</button></div>' +
+    '<p class="nb-suave">Revisa la app con los permisos de otro rol, sin crear usuarios ni contraseñas. Solo cambia lo que ves tú en este dispositivo; para volver pulsa «Volver a administrador».</p>' +
+    '<label class="nb-campo">Rol<select id="vc-rol">' + op + '</select></label>' +
+    '<label class="nb-campo" id="vc-nom-l">Persona del listado de personal (coordinador, cocina y camarero solo ven sus bodas)<input id="vc-nom" list="vc-lista" placeholder="Escribe o elige un nombre" value="' + esc(VER && VER.nombre || '') + '"><datalist id="vc-lista">' + lista + '</datalist></label>' +
+    '<div class="nb-fila"><button class="nb-btn nb-prin" id="vc-ok">Ver la app así</button></div>';
+  const pinta = function () { const r = $('vc-rol').value; $('vc-nom-l').style.display = (r === 'gestor' || r === 'jefesala') ? 'none' : ''; };
+  $('vc-rol').addEventListener('change', pinta); pinta();
+  $('vc-ok').addEventListener('click', function () {
+    const r = $('vc-rol').value, n = String($('vc-nom').value || '').trim().toUpperCase();
+    if ((r === 'coordinador' || r === 'cocina' || r === 'camarero') && !n) { aviso('Elige una persona del listado de personal.', true); return; }
+    try { localStorage.setItem('am_ver_como', JSON.stringify({ rol: r, nombre: (r === 'gestor' || r === 'jefesala') ? '' : n })); } catch (er) {}
+    location.reload();
+  });
+}
 
 onAuthStateChanged(auth, function (user) {
   S.user = user;
@@ -442,8 +484,16 @@ function aplicarRol() {
   document.body.classList.add('rol-' + r);
   if (!puedeEditar()) document.body.classList.add('rol-lectura');
   if (!puedePlanificar()) document.body.classList.add('rol-sinplan');
+  if (rolReal() === 'admin') document.body.classList.add('rol-real-admin');
   $('nb-u-nombre').textContent = S.perfil.nombre || S.user.email;
   $('nb-u-rol').textContent = ROLES[r] || r;
+  if (viendoComo()) {
+    document.body.classList.add('am-viendo-como');
+    $('nb-u-rol').textContent = 'Viendo como ' + (ROLES[r] || r);
+    const b = document.createElement('div'); b.className = 'am-vercomo-barra';
+    b.innerHTML = '<i class="fa-solid fa-user-secret"></i> Vista de prueba: <b>' + esc(ROLES[r] || r) + '</b>' + (VER.nombre ? ' · ' + esc(VER.nombre) : '') + ' <button data-nb="vercomo">Cambiar</button><button data-nb="vercomo-salir">Volver a administrador</button>';
+    document.body.appendChild(b);
+  }
   const ini = String(S.perfil.nombre || '?').trim().split(' ');
   $('nb-u-avatar').textContent = ((ini[0] || '?').charAt(0) + (ini.length > 1 ? ini[ini.length - 1].charAt(0) : '')).toUpperCase();
 
