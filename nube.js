@@ -46,7 +46,10 @@ function mayus(v) { return String(v || '').trim().toUpperCase(); }
 let VER = null;
 try { VER = JSON.parse(localStorage.getItem('am_ver_como') || 'null'); } catch (e) { VER = null; }
 function rolReal() { return S.perfil ? S.perfil.rol : ''; }
-function viendoComo() { return rolReal() === 'admin' && VER && ROLES[VER.rol] && VER.rol !== 'admin' && VER.rol !== 'pendiente'; }
+// Solo para el creador de la app (primer administrador, config/bootstrap) y el propietario
+const VER_COMO_CORREOS = ['teo@alfonsomira.com'];
+function puedeVerComo() { return !!S.verComo; }
+function viendoComo() { return puedeVerComo() && VER && ROLES[VER.rol] && VER.rol !== 'admin' && VER.rol !== 'pendiente'; }
 function rol() { return viendoComo() ? VER.rol : rolReal(); }
 function nombreVista() { return viendoComo() && VER.nombre ? VER.nombre : (S.perfil ? S.perfil.nombre : ''); }
 function puedePlanificar() { return ROLES_PLAN.indexOf(rol()) >= 0; }
@@ -419,7 +422,7 @@ function nombresListado() {
   return out.sort();
 }
 function abrirVerComo() {
-  if (rolReal() !== 'admin') return;
+  if (!puedeVerComo()) return;
   const m = $('nb-modal');
   m.classList.remove('nb-oculto');
   const op = ['gestor', 'jefesala', 'coordinador', 'cocina', 'camarero'].map(function (r) { return '<option value="' + r + '"' + (VER && VER.rol === r ? ' selected' : '') + '>' + ROLES[r] + '</option>'; }).join('');
@@ -468,6 +471,9 @@ async function prepararPerfil(user) {
       await setDoc(refU, { nombre: nombre, email: user.email || '', rol: 'pendiente', creado: serverTimestamp() });
     }
   }
+  // ¿Puede usar «Ver como»?
+  S.verComo = VER_COMO_CORREOS.indexOf(String(user.email || '').trim().toLowerCase()) >= 0;
+  if (!S.verComo) { try { const bs = await getDoc(doc(db, 'config', 'bootstrap')); S.verComo = bs.exists() && bs.data().adminUid === user.uid; } catch (e) { S.verComo = false; } }
   onSnapshot(refU, function (s) {
     if (!s.exists()) { signOut(auth).then(function () { location.reload(); }); return; }
     const anterior = S.perfil ? S.perfil.rol : null;
@@ -484,7 +490,7 @@ function aplicarRol() {
   document.body.classList.add('rol-' + r);
   if (!puedeEditar()) document.body.classList.add('rol-lectura');
   if (!puedePlanificar()) document.body.classList.add('rol-sinplan');
-  if (rolReal() === 'admin') document.body.classList.add('rol-real-admin');
+  if (puedeVerComo()) document.body.classList.add('am-puede-vercomo');
   $('nb-u-nombre').textContent = S.perfil.nombre || S.user.email;
   $('nb-u-rol').textContent = ROLES[r] || r;
   if (viendoComo()) {
