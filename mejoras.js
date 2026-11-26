@@ -1349,6 +1349,9 @@
   async function renderCronograma() {
     if (!crSemana) crSemana = lunesDe(new Date());
     const root = document.getElementById('am-root-am-cronograma');
+    // Solo administración, gestor y jefe de sala
+    const rc = rolActual();
+    if (rc && ['admin', 'gestor', 'jefesala'].indexOf(rc) < 0) { root.innerHTML = '<div class="am-vacio">El cronograma de logística solo lo ven el gestor y el jefe de sala.</div>'; return; }
     root.innerHTML = cabecera('CRONOGRAMA LOGÍSTICA', 'Checklist operativo de preservicio, montaje y cierre · REVE01-22', false) + '<div class="am-vacio">Cargando…</div>';
     await crCargar();
     const edita = api() && api().puedeEditar() && !enVision();

@@ -529,3 +529,5 @@ body.am-viendo-como .nb-menu-usuarios { display: none !important; }
 .am-vercomo-barra { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 9999; background: #C48A1E; color: #1F1B16; font-size: 13px; font-weight: 600; padding: 8px 10px 8px 14px; border-radius: 99px; box-shadow: 0 6px 20px rgba(0,0,0,.25); display: flex; gap: 8px; align-items: center; white-space: nowrap; max-width: calc(100vw - 20px); overflow-x: auto; }
 .am-vercomo-barra button { background: #1F1B16; color: #fff; border-radius: 99px; padding: 4px 10px; font-size: 12px; font-weight: 700; }
 @media print { .am-vercomo-barra { display: none !important; } }
+/* Cronograma logística: solo administración, gestor y jefe de sala */
+body.rol-coordinador #tab-am-cronograma, body.rol-cocina #tab-am-cronograma, body.rol-camarero #tab-am-cronograma { display: none !important; }
