@@ -852,6 +852,7 @@
                     <div id="layer-zones" class="absolute inset-0 w-full h-full pointer-events-none z-30"></div>
                 </div>
                 
+                <div id="plano-rangos" class="w-[900px] mt-3 hidden"></div>
                 <div id="plano-leyenda" class="w-[900px] mt-3 bg-white border border-gray-300 rounded-lg px-4 py-3 shadow-sm hidden"></div>
                 <div class="w-[900px] mt-6 flex justify-between items-start gap-4">
                     <div class="flex flex-col gap-3">
@@ -1117,7 +1118,7 @@
                 <button onclick="saveMesaZona('4.2')" class="zona-btn-42 h-11 rounded-lg font-black shadow hover:scale-105 transition">4.2</button>
                 <button onclick="saveMesaZona('4.3')" class="zona-btn-43 h-11 rounded-lg font-black shadow hover:scale-105 transition">4.3</button>
             </div>
-            <button onclick="saveMesaZona(0)" class="w-full py-2 bg-gray-100 text-gray-700 font-bold rounded-lg hover:bg-gray-200 mb-2">Quitar Zona</button>
+            <button onclick="saveMesaZona(0)" class="w-full py-2 bg-gray-100 text-gray-700 font-bold rounded-lg hover:bg-gray-200 mb-2">Quitar rango</button>
             <button onclick="closeModalZona()" class="w-full py-2 bg-white border border-gray-300 text-gray-700 font-bold rounded-lg hover:bg-gray-50">Cancelar</button>
         </div>
     </div>
@@ -2574,9 +2575,12 @@
         }
 
         function renderPlanoZonasLegend() {
-            const layerZones = document.getElementById('layer-zones');
+            // Los cuadros de cada rango van debajo del plano (dentro tapaban las mesas)
+            const lz0 = document.getElementById('layer-zones'); if (lz0) lz0.innerHTML = '';
+            const layerZones = document.getElementById('plano-rangos');
             layerZones.innerHTML = '';
-            if(currentPlanoMode !== 'camareros' || !currentEventId) return;
+            if(currentPlanoMode !== 'camareros' || !currentEventId) { layerZones.classList.add('hidden'); return; }
+            layerZones.classList.remove('hidden');
 
             const ev = appData.events[currentEventId];
             if(!ev.zonePositions) ev.zonePositions = {};
@@ -2614,8 +2618,7 @@
 
                 let card = document.createElement('div');
                 card.className = 'zone-card';
-                card.style.cssText = `left: ${posX}px; top: ${posY}px; background-color: ${cColor.bg}; color: ${cColor.text}; pointer-events: auto;`;
-                card.onmousedown = (e) => startZoneDrag(e, z);
+                card.style.cssText = `background-color: ${cColor.bg}; color: ${cColor.text};`;
                 card.innerHTML = `
                     <div class="border-b pb-1 mb-1 font-black uppercase tracking-wider text-[11px] pointer-events-none" style="border-color:${cColor.text === 'white' ? 'rgba(255,255,255,.4)' : 'rgba(0,0,0,.2)'};">${cColor.name}</div>
                     <div class="flex flex-col gap-0.5 pointer-events-none">${wHtml}</div>

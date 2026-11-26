@@ -516,3 +516,7 @@ body.rol-admin .am-solo-equipo, body.rol-gestor .am-solo-equipo { display: none 
 .am-mn-com-tab th { background: #3F5A2E; color: #fff; font-size: 9px; padding: 2px 4px; text-align: left; }
 .am-mn-com-tab td { border-bottom: 1px solid #E5DFD2; padding: 2px 4px; vertical-align: top; }
 .am-mn-com-v { color: #9A9180; font-style: italic; }
+/* Cuadros de rango debajo del plano de camareros */
+#plano-rangos { display: flex; flex-wrap: wrap; gap: 8px; }
+#plano-rangos.hidden { display: none; }
+#plano-rangos .zone-card { position: static; flex: 1 1 160px; cursor: default; box-shadow: none; }

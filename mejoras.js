@@ -923,7 +923,7 @@
     const lab = c.querySelector('.absolute.top-4.left-4'); if (lab) lab.remove(); // rótulo «SALA / CARPA»
     // Los cuadros de personal por zona salen del plano (tapaban mesas y platos) y van debajo como leyenda
     let leyZonas = null;
-    const zcs = Array.prototype.slice.call(c.querySelectorAll('.zone-card'));
+    const zcs = Array.prototype.slice.call(c.querySelectorAll('.zone-card')).concat(Array.prototype.slice.call(document.querySelectorAll('#plano-rangos .zone-card')));
     if (zcs.length) {
       leyZonas = document.createElement('div');
       leyZonas.className = 'am-mn-zonas';
