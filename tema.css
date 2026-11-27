@@ -458,6 +458,9 @@ body.rol-admin .am-solo-equipo, body.rol-gestor .am-solo-equipo { display: none 
   body.am-menu-abierto > aside{transform:none}
   body.am-menu-abierto .am-velo{display:block;position:fixed;inset:0;z-index:59;background:rgba(20,17,13,.45)}
   body > main{padding-top:calc(56px + env(safe-area-inset-top, 0px));width:100vw}
+  /* iPhone: la franja de la hora toma el color oscuro de la barra (sin degradado claro) */
+  html{background:#1F1B16}
+  body{min-height:100vh;min-height:100dvh}
 }
 @media print{.am-barra-movil,.am-velo{display:none!important}}
 
