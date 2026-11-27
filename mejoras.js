@@ -2321,8 +2321,11 @@
   };
   function capaPantallaCompleta() {
     if (document.getElementById('am-pcomp')) return;
+    // Botón en la barra superior del móvil (siempre visible, no lo tapa ningún aviso)
+    const bm = document.getElementById('am-barra-movil');
+    if (bm && !document.getElementById('am-pcomp-btn')) bm.insertAdjacentHTML('beforeend', '<button id="am-pcomp-btn" class="am-pcomp-btn" onclick="amPantallaCompleta()" aria-label="Pantalla completa"><i class="fa-solid fa-expand"></i><span>Pantalla completa</span></button>');
     document.body.insertAdjacentHTML('beforeend',
-      '<button id="am-pcomp-btn" class="am-pcomp-btn" onclick="amPantallaCompleta()" aria-label="Pantalla completa"><i class="fa-solid fa-expand"></i></button>' +
+
       '<div id="am-pcomp" class="am-pcomp"><div class="am-pcomp-barra">' +
       '<button class="am-pcomp-volver" onclick="amPantallaCompletaCerrar()"><i class="fa-solid fa-arrow-left"></i> Volver</button>' +
       '<div class="am-pcomp-zoom"><button onclick="amPcompZoom(-0.1)" aria-label="Alejar">−</button><span id="am-pcomp-z">100%</span><button onclick="amPcompZoom(0.1)" aria-label="Acercar">+</button><button onclick="amPcompZoom(0)">Ajustar</button></div>' +

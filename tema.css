@@ -562,8 +562,9 @@ body.rol-camarero .am-pc-modos { display: none !important; }
 /* Móvil: pantalla completa para planos y hojas anchas */
 .am-pcomp-btn, .am-pcomp { display: none; }
 @media (max-width: 900px) {
-  .am-pcomp-btn { display: flex; position: fixed; right: 14px; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 57; width: 50px; height: 50px; border-radius: 50%; align-items: center; justify-content: center; background: #3F5A2E; color: #fff; font-size: 19px; box-shadow: 0 6px 18px rgba(0,0,0,.3); }
-  body.am-menu-abierto .am-pcomp-btn, body.am-pcomp-abierta .am-pcomp-btn { display: none; }
+  .am-pcomp-btn { display: flex; margin-left: auto; height: 38px; padding: 0 12px; border-radius: 10px; align-items: center; gap: 7px; background: #3F5A2E; color: #fff; font-size: 13px; font-weight: 800; border: 1px solid rgba(246,242,234,.25); }
+  .am-pcomp-btn i { font-size: 15px; }
+  body.am-sin-boda .am-pcomp-btn { display: none; }
   body.am-pcomp-abierta .am-pcomp { display: flex; flex-direction: column; position: fixed; inset: 0; z-index: 70; background: var(--am-fondo, #F6F2EA); }
   body.am-pcomp-abierta { overflow: hidden; }
   .am-pcomp-barra { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; background: #1F1B16; color: #fff; }
@@ -575,3 +576,24 @@ body.rol-camarero .am-pc-modos { display: none !important; }
   .am-pcomp-cuerpo > [id^="view-"] { height: auto !important; min-height: 100%; overflow: visible !important; width: max-content; min-width: 100%; }
 }
 @media print { .am-pcomp-btn { display: none !important; } }
+
+/* ── Móvil: avisos compactos, pestañas deslizables y plano más ordenado ── */
+@media (max-width: 900px) {
+  /* Modo visión: franja fina abajo en lugar del cuadro grande */
+  #vision-banner { width: auto !important; left: 8px !important; right: 8px !important; bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important; transform: none !important; padding: 6px 8px !important; gap: 8px !important; border-width: 1px !important; border-radius: 12px !important; }
+  #vision-banner > i { font-size: 14px !important; }
+  #vision-banner > div { font-size: 11px !important; letter-spacing: 0 !important; line-height: 1.2; }
+  #vision-banner > div .vb-boda, #vision-banner > div > span.block { display: none !important; }
+  #vision-banner button { padding: 6px 9px !important; font-size: 11px !important; white-space: nowrap; }
+  /* Avisos de las hojas, más pequeños */
+  .am-alerta { font-size: 11.5px; padding: 8px 10px; gap: 8px; border-radius: 10px; margin-bottom: 10px; line-height: 1.35; }
+  .am-alerta i { font-size: 14px; }
+  /* Barras de subpestañas: una sola fila que se desliza con el dedo */
+  body > main [id^="view-"] > div.sticky { overflow-x: auto; flex-wrap: nowrap !important; gap: 4px !important; padding: 10px 10px 0 !important; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  body > main [id^="view-"] > div.sticky::-webkit-scrollbar { display: none; }
+  body > main [id^="view-"] > div.sticky > button { flex: 0 0 auto; white-space: nowrap; font-size: 12px; padding-left: 8px !important; padding-right: 8px !important; }
+  /* Plano: cabecera, avisos y herramientas al ancho de la pantalla; solo el lienzo se desliza */
+  #plano-editor-area > div:not(#canvas-plano) { width: 100% !important; max-width: 100%; }
+  #plano-editor-area > div:not(#canvas-plano).flex { flex-wrap: wrap; }
+}
+@media (max-width: 900px) { body.modo-vision > main [id^="view-"] { padding-bottom: 72px !important; } }
