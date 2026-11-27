@@ -1647,6 +1647,7 @@
   (function () {
     const orig = window.switchTab;
     window.switchTab = function (tabId) {
+      if (pcVista) pcCerrar();
       if (api() && esCamarero() && CAM_TABS.indexOf(tabId) < 0) { tabId = evActual() ? 'coordinadores-consumos' : 'calendar'; }
       const r = orig.call(this, tabId);
       if (api() && esCamarero()) {
@@ -2272,9 +2273,65 @@
       setTimeout(function () { amMenuMovil(false); }, 60);
     });
   }
+  // Móvil: ver la hoja abierta a pantalla completa (planos y hojas anchas), con zoom y botón para volver
+  let pcVista = null, pcPadre = null, pcSig = null, pcZoom = 1;
+  function vistaActiva() {
+    const vs = document.querySelectorAll('body > main [id^="view-"]');
+    for (let i = 0; i < vs.length; i++) if (!vs[i].classList.contains('hidden') && vs[i].offsetParent !== null) return vs[i];
+    return null;
+  }
+  function pcAplicarZoom() {
+    if (!pcVista) return;
+    pcVista.style.zoom = pcZoom;
+    const z = document.getElementById('am-pcomp-z'); if (z) z.textContent = Math.round(pcZoom * 100) + '%';
+  }
+  window.amPantallaCompleta = function () {
+    if (pcVista) return;
+    const v = vistaActiva(); if (!v) return;
+    const capa = document.getElementById('am-pcomp');
+    pcVista = v; pcPadre = v.parentNode; pcSig = v.nextSibling;
+    capa.querySelector('.am-pcomp-cuerpo').appendChild(v);
+    document.body.classList.add('am-pcomp-abierta');
+    pcZoom = 1; pcAplicarZoom();
+    try { history.pushState({ amPcomp: 1 }, ''); } catch (e) {}
+    try { if (window.screen && screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(function () {}); } catch (e) {}
+  };
+  function pcCerrar() {
+    if (!pcVista) return;
+    pcVista.style.zoom = '';
+    if (pcSig && pcSig.parentNode === pcPadre) pcPadre.insertBefore(pcVista, pcSig); else pcPadre.appendChild(pcVista);
+    pcVista = null;
+    document.body.classList.remove('am-pcomp-abierta');
+    try { if (window.screen && screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
+  }
+  window.amPantallaCompletaCerrar = function () {
+    if (!pcVista) return;
+    if (history.state && history.state.amPcomp) history.back(); else pcCerrar();
+  };
+  window.addEventListener('popstate', function () { if (pcVista) pcCerrar(); });
+  window.amPcompZoom = function (d) {
+    if (!pcVista) return;
+    if (d === 0) {
+      // Ajustar al ancho de la pantalla
+      pcVista.style.zoom = 1;
+      const ancho = pcVista.scrollWidth || 1, disp = document.querySelector('#am-pcomp .am-pcomp-cuerpo').clientWidth - 8;
+      pcZoom = Math.max(0.3, Math.min(1, disp / ancho));
+    } else pcZoom = Math.max(0.3, Math.min(2.5, Math.round((pcZoom + d) * 10) / 10));
+    pcAplicarZoom();
+  };
+  function capaPantallaCompleta() {
+    if (document.getElementById('am-pcomp')) return;
+    document.body.insertAdjacentHTML('beforeend',
+      '<button id="am-pcomp-btn" class="am-pcomp-btn" onclick="amPantallaCompleta()" aria-label="Pantalla completa"><i class="fa-solid fa-expand"></i></button>' +
+      '<div id="am-pcomp" class="am-pcomp"><div class="am-pcomp-barra">' +
+      '<button class="am-pcomp-volver" onclick="amPantallaCompletaCerrar()"><i class="fa-solid fa-arrow-left"></i> Volver</button>' +
+      '<div class="am-pcomp-zoom"><button onclick="amPcompZoom(-0.1)" aria-label="Alejar">−</button><span id="am-pcomp-z">100%</span><button onclick="amPcompZoom(0.1)" aria-label="Acercar">+</button><button onclick="amPcompZoom(0)">Ajustar</button></div>' +
+      '</div><div class="am-pcomp-cuerpo"></div></div>');
+  }
   window.amMenuMovil = function (v) { document.body.classList.toggle('am-menu-abierto', v === undefined ? !document.body.classList.contains('am-menu-abierto') : !!v); };
   window.__mejorasArranque = function () {
     barraMovil();
+    capaPantallaCompleta();
     crearMenu();
     const a = api();
     if (a) {
