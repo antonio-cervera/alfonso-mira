@@ -451,13 +451,13 @@ body.rol-admin .am-solo-equipo, body.rol-gestor .am-solo-equipo { display: none 
 .am-barra-movil{display:none}
 .am-velo{display:none}
 @media (max-width: 900px){
-  .am-barra-movil{display:flex;position:fixed;top:0;left:0;right:0;height:56px;z-index:58;align-items:center;gap:12px;padding:0 12px;background:#1F1B16;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+  .am-barra-movil{display:flex;position:fixed;top:0;left:0;right:0;height:calc(56px + env(safe-area-inset-top, 0px));padding-top:env(safe-area-inset-top, 0px);z-index:58;align-items:center;gap:12px;padding-left:12px;padding-right:12px;background:#1F1B16;box-shadow:0 2px 12px rgba(0,0,0,.25)}
   .am-barra-movil img{height:30px;width:auto}
   .am-hamb{width:40px;height:40px;border-radius:10px;border:1px solid rgba(246,242,234,.25);background:transparent;color:#F6F2EA;font-size:18px}
-  body > aside{position:fixed!important;top:0;left:0;bottom:0;width:280px!important;max-width:85vw;z-index:60!important;transform:translateX(-105%);transition:transform .25s ease}
+  body > aside{position:fixed!important;top:0;left:0;bottom:0;padding-top:env(safe-area-inset-top, 0px);width:280px!important;max-width:85vw;z-index:60!important;transform:translateX(-105%);transition:transform .25s ease}
   body.am-menu-abierto > aside{transform:none}
   body.am-menu-abierto .am-velo{display:block;position:fixed;inset:0;z-index:59;background:rgba(20,17,13,.45)}
-  body > main{padding-top:56px;width:100vw}
+  body > main{padding-top:calc(56px + env(safe-area-inset-top, 0px));width:100vw}
 }
 @media print{.am-barra-movil,.am-velo{display:none!important}}
 
