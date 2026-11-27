@@ -565,15 +565,6 @@ body.rol-camarero .am-pc-modos { display: none !important; }
   .am-pcomp-btn { display: flex; margin-left: auto; height: 38px; padding: 0 12px; border-radius: 10px; align-items: center; gap: 7px; background: #3F5A2E; color: #fff; font-size: 13px; font-weight: 800; border: 1px solid rgba(246,242,234,.25); }
   .am-pcomp-btn i { font-size: 15px; }
   body.am-sin-boda .am-pcomp-btn { display: none; }
-  body.am-pcomp-abierta .am-pcomp { display: flex; flex-direction: column; position: fixed; inset: 0; z-index: 70; background: var(--am-fondo, #F6F2EA); }
-  body.am-pcomp-abierta { overflow: hidden; }
-  .am-pcomp-barra { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; background: #1F1B16; color: #fff; }
-  .am-pcomp-volver { background: #C48A1E; color: #1F1B16; font-weight: 800; font-size: 14px; border-radius: 999px; padding: 8px 14px; }
-  .am-pcomp-zoom { display: flex; align-items: center; gap: 6px; }
-  .am-pcomp-zoom button { min-width: 38px; height: 36px; border-radius: 8px; background: rgba(255,255,255,.12); color: #fff; font-weight: 800; font-size: 16px; padding: 0 8px; }
-  .am-pcomp-zoom span { min-width: 44px; text-align: center; font-size: 12px; font-weight: 700; }
-  .am-pcomp-cuerpo { flex: 1 1 auto; overflow: auto; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y pinch-zoom; }
-  .am-pcomp-cuerpo > [id^="view-"] { height: auto !important; min-height: 100%; overflow: visible !important; width: max-content; min-width: 100%; }
 }
 @media print { .am-pcomp-btn { display: none !important; } }
 
@@ -597,3 +588,21 @@ body.rol-camarero .am-pc-modos { display: none !important; }
   #plano-editor-area > div:not(#canvas-plano).flex { flex-wrap: wrap; }
 }
 @media (max-width: 900px) { body.modo-vision > main [id^="view-"] { padding-bottom: 72px !important; } }
+
+/* Pantalla completa (móvil y ordenador) */
+body.am-pcomp-abierta .am-pcomp { display: flex; flex-direction: column; position: fixed; inset: 0; z-index: 70; background: var(--am-fondo, #F6F2EA); padding-top: env(safe-area-inset-top, 0px); }
+body.am-pcomp-abierta { overflow: hidden; }
+.am-pcomp-barra { flex: 0 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 8px 10px; background: #1F1B16; color: #fff; }
+.am-pcomp-volver { background: #C48A1E; color: #1F1B16; font-weight: 800; font-size: 14px; border-radius: 999px; padding: 8px 14px; }
+.am-pcomp-zoom { display: flex; align-items: center; gap: 6px; }
+.am-pcomp-zoom button { min-width: 38px; height: 36px; border-radius: 8px; background: rgba(255,255,255,.12); color: #fff; font-weight: 800; font-size: 16px; padding: 0 8px; }
+.am-pcomp-zoom span { min-width: 44px; text-align: center; font-size: 12px; font-weight: 700; }
+.am-pcomp-cuerpo { flex: 1 1 auto; overflow: auto; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y pinch-zoom; }
+.am-pcomp-env { width: max-content; min-width: 100%; }
+.am-pcomp-env > [id^="view-"] { height: auto !important; min-height: 100%; overflow: visible !important; }
+.am-pcomp-env.am-pcomp-solo { padding: 12px; }
+.am-pcomp-env.am-pcomp-solo > * { margin: 0 0 12px 0 !important; max-width: none !important; }
+.am-pcomp-env.am-pcomp-solo > #plano-rangos, .am-pcomp-env.am-pcomp-solo > #am-pc-rangos { width: 900px !important; }
+.am-ver-grande { background: #3F5A2E; color: #fff; font-weight: 800; font-size: 13px; border-radius: 10px; padding: 8px 14px; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+.am-ver-grande:hover { background: #34491F; }
+@media print { .am-ver-grande-fila { display: none !important; } }

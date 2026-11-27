@@ -846,6 +846,7 @@
                     <button type="button" class="sidebar-tool px-3 py-1.5 bg-white border border-gray-300 rounded font-bold text-gray-700" draggable="true" ondragstart="dragStart(event, 'texto')" onclick="planoAnadir('texto')" title="Pulsa o arrastra al plano"><i class="fa-solid fa-font mr-1"></i>Texto</button>
                     <button type="button" class="ml-auto px-3 py-1.5 bg-red-50 border border-red-200 rounded font-bold text-red-600" ondragover="allowDrop(event)" ondrop="deleteItemDrop(event)" onclick="deleteItemDrop({preventDefault:function(){}})" title="Selecciona un elemento y pulsa, o arrástralo aquí"><i class="fa-solid fa-trash-can mr-1"></i>Eliminar seleccionado</button>
                 </div>
+                <div class="w-[900px] mb-2 flex justify-end am-ver-grande-fila"><button onclick="amPantallaCompleta(['canvas-plano','plano-rangos'])" class="am-ver-grande"><i class="fa-solid fa-expand mr-1"></i> Ver plano en grande</button></div>
                 <div id="canvas-plano" class="w-[900px] h-[600px] rounded-xl relative plan-grid overflow-hidden bg-white shadow-xl flex-shrink-0 border border-gray-300" ondragover="allowDrop(event)" ondrop="dropOnCanvas(event)">
                     <div class="absolute top-4 left-4 bg-white/90 px-4 py-2 rounded shadow text-sm font-black text-gray-700 z-0 border">SALA / CARPA</div>
                     <div id="layer-mesas" class="absolute inset-0 z-10 w-full h-full"></div>

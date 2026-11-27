@@ -1814,7 +1814,7 @@
     let orden = []; try { orden = ZONE_ORDER.slice(); } catch (er) {}
     const ks = Object.keys(usados).sort(function (a, b) { return orden.indexOf(a) - orden.indexOf(b); });
     if (!ks.length) return '<div class="am-suave" style="margin-top:10px;">Pulsa un punto del plano para asignarle un rango de camareros.</div>';
-    return '<div class="am-pc-rangos">' + ks.map(function (k) {
+    return '<div class="am-pc-rangos" id="am-pc-rangos">' + ks.map(function (k) {
       const c = pcRangoCol(k);
       return '<div class="zone-card' + (mio === k ? ' am-mn-zona-mia' : '') + '" style="background:' + c.bg + ';color:' + c.text + ';"><div class="am-pc-rt">' + esc(c.name) + '</div>' +
         (usados[k].length ? usados[k].map(function (w) { return '<div>' + esc(txt(w.nombre).toUpperCase()) + ' <small>(' + esc(txt(w.responsabilidad).charAt(0)) + ')</small></div>'; }).join('') : '<div style="opacity:.6;font-style:italic;">Sin camareros</div>') + '</div>';
@@ -1823,7 +1823,8 @@
   function renderPlanoCoctelRangos(root, d) {
     const e = evActual();
     const yo = esCamarero() ? miPuesto(e) : null, mio = yo ? txt(yo.zona) : '';
-    let h = '<div class="am-pc-lienzo plan-grid" id="am-pc-lienzo" style="' + (d.fondo ? 'background-image:url(' + d.fondo + ');background-size:contain;background-repeat:no-repeat;background-position:center;' : '') + '">';
+    let h = '<div class="am-ver-grande-fila" style="max-width:900px;display:flex;justify-content:flex-end;margin-bottom:8px;"><button class="am-ver-grande" onclick="amPantallaCompleta([\'am-pc-lienzo\',\'am-pc-rangos\'])"><i class="fa-solid fa-expand mr-1"></i> Ver plano en grande</button></div>' +
+      '<div class="am-pc-lienzo plan-grid" id="am-pc-lienzo" style="' + (d.fondo ? 'background-image:url(' + d.fondo + ');background-size:contain;background-repeat:no-repeat;background-position:center;' : '') + '">';
     d.items.forEach(function (it) {
       const esTexto = it.tipo === 'TEXTO', c = it.rango ? pcRangoCol(it.rango) : null;
       const fondo = esTexto ? '' : (c ? 'background:' + c.bg + ';color:' + c.text + ';' : 'background:#E8E3D8;color:#7A7163;');
@@ -1862,6 +1863,7 @@
       (d.fondo ? '<button class="am-btn" onclick="amPcFondoQuitar()">Quitar fondo</button>' : '') +
       '<span class="am-suave">Arrastra para mover · esquina para cambiar el tamaño · doble clic para cambiar el texto · Supr para borrar</span>' +
       '<button class="am-btn am-peligro" onclick="amPcBorrarSel()">Borrar seleccionado</button></div>';
+    h += '<div class="am-ver-grande-fila" style="max-width:900px;display:flex;justify-content:flex-end;margin-bottom:8px;"><button class="am-ver-grande" onclick="amPantallaCompleta([\'am-pc-lienzo\'])"><i class="fa-solid fa-expand mr-1"></i> Ver plano en grande</button></div>';
     h += '<div class="am-pc-lienzo plan-grid" id="am-pc-lienzo" style="' + (d.fondo ? 'background-image:url(' + d.fondo + ');background-size:contain;background-repeat:no-repeat;background-position:center;' : '') + '">';
     d.items.forEach(function (it) {
       const esTexto = it.tipo === 'TEXTO';
@@ -2274,7 +2276,8 @@
     });
   }
   // Móvil: ver la hoja abierta a pantalla completa (planos y hojas anchas), con zoom y botón para volver
-  let pcVista = null, pcPadre = null, pcSig = null, pcZoom = 1;
+  // pcVista = envoltorio con lo que se está viendo; pcMov = elementos movidos y su sitio original
+  let pcVista = null, pcMov = [], pcZoom = 1;
   function vistaActiva() {
     const vs = document.querySelectorAll('body > main [id^="view-"]');
     for (let i = 0; i < vs.length; i++) if (!vs[i].classList.contains('hidden') && vs[i].offsetParent !== null) return vs[i];
@@ -2285,22 +2288,30 @@
     pcVista.style.zoom = pcZoom;
     const z = document.getElementById('am-pcomp-z'); if (z) z.textContent = Math.round(pcZoom * 100) + '%';
   }
-  window.amPantallaCompleta = function () {
+  // ids: lista de elementos a ver (p. ej. el lienzo del plano y sus rangos); sin ids, la hoja entera
+  window.amPantallaCompleta = function (ids) {
     if (pcVista) return;
-    const v = vistaActiva(); if (!v) return;
-    const capa = document.getElementById('am-pcomp');
-    pcVista = v; pcPadre = v.parentNode; pcSig = v.nextSibling;
-    capa.querySelector('.am-pcomp-cuerpo').appendChild(v);
+    let els = [];
+    if (ids && ids.length) ids.forEach(function (id) { const e = document.getElementById(id); if (e && !e.classList.contains('hidden')) els.push(e); });
+    else { const v = vistaActiva(); if (v) els.push(v); }
+    if (!els.length) return;
+    const cuerpo = document.querySelector('#am-pcomp .am-pcomp-cuerpo');
+    const env = document.createElement('div'); env.className = 'am-pcomp-env' + (ids && ids.length ? ' am-pcomp-solo' : '');
+    cuerpo.innerHTML = ''; cuerpo.appendChild(env);
+    pcMov = els.map(function (e) { return { e: e, p: e.parentNode, s: e.nextSibling }; });
+    els.forEach(function (e) { env.appendChild(e); });
+    pcVista = env;
     document.body.classList.add('am-pcomp-abierta');
     pcZoom = 1; pcAplicarZoom();
+    if (ids && ids.length) setTimeout(function () { window.amPcompZoom(0); }, 30);
     try { history.pushState({ amPcomp: 1 }, ''); } catch (e) {}
     try { if (window.screen && screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(function () {}); } catch (e) {}
   };
   function pcCerrar() {
     if (!pcVista) return;
     pcVista.style.zoom = '';
-    if (pcSig && pcSig.parentNode === pcPadre) pcPadre.insertBefore(pcVista, pcSig); else pcPadre.appendChild(pcVista);
-    pcVista = null;
+    pcMov.slice().reverse().forEach(function (m) { if (m.s && m.s.parentNode === m.p) m.p.insertBefore(m.e, m.s); else m.p.appendChild(m.e); });
+    pcMov = []; pcVista = null;
     document.body.classList.remove('am-pcomp-abierta');
     try { if (window.screen && screen.orientation && screen.orientation.unlock) screen.orientation.unlock(); } catch (e) {}
   }
@@ -2314,9 +2325,9 @@
     if (d === 0) {
       // Ajustar al ancho de la pantalla
       pcVista.style.zoom = 1;
-      const ancho = pcVista.scrollWidth || 1, disp = document.querySelector('#am-pcomp .am-pcomp-cuerpo').clientWidth - 8;
-      pcZoom = Math.max(0.3, Math.min(1, disp / ancho));
-    } else pcZoom = Math.max(0.3, Math.min(2.5, Math.round((pcZoom + d) * 10) / 10));
+      const ancho = pcVista.scrollWidth || 1, disp = document.querySelector('#am-pcomp .am-pcomp-cuerpo').clientWidth - 12;
+      pcZoom = Math.max(0.25, Math.min(1, disp / ancho));
+    } else pcZoom = Math.max(0.25, Math.min(2.5, Math.round((pcZoom + d) * 10) / 10));
     pcAplicarZoom();
   };
   function capaPantallaCompleta() {

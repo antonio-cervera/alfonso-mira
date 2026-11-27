@@ -471,13 +471,13 @@
         @media print { body * { visibility:hidden !important; } #seating-a4-sheet,#seating-a4-sheet * { visibility:visible !important; } #seating-a4-sheet { position:absolute;left:0;top:0;width:210mm;min-height:297mm;box-shadow:none;border:none; } }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="tema-colores.css?v=1795804596">
-    <link rel="stylesheet" href="tema.css?v=1795804596">
-    <link rel="stylesheet" href="tw.css?v=1795804596">
+    <link rel="stylesheet" href="tema-colores.css?v=1795804687">
+    <link rel="stylesheet" href="tema.css?v=1795804687">
+    <link rel="stylesheet" href="tw.css?v=1795804687">
 </head>
 <body class="h-screen w-screen flex flex-row">
-    <script src="firebase-config.js?v=1795804596"></script>
-    <script src="puente.js?v=1795804596"></script>
+    <script src="firebase-config.js?v=1795804687"></script>
+    <script src="puente.js?v=1795804687"></script>
 
     <!-- DATALISTS PARA MATERIALES -->
     <datalist id="dl-manteleria-art"><option value="MANTELES CASA"></option><option value="MANTELES ALQUILER"></option><option value="CUBREMANTEL CASA"></option><option value="CUBREMANTEL ALQUILER"></option><option value="SERVILLETAS CASA"></option><option value="SERVILLETAS ALQUILER"></option><option value="LITOS"></option></datalist>
@@ -863,6 +863,7 @@
                     <button type="button" class="sidebar-tool px-3 py-1.5 bg-white border border-gray-300 rounded font-bold text-gray-700" draggable="true" ondragstart="dragStart(event, 'texto')" onclick="planoAnadir('texto')" title="Pulsa o arrastra al plano"><i class="fa-solid fa-font mr-1"></i>Texto</button>
                     <button type="button" class="ml-auto px-3 py-1.5 bg-red-50 border border-red-200 rounded font-bold text-red-600" ondragover="allowDrop(event)" ondrop="deleteItemDrop(event)" onclick="deleteItemDrop({preventDefault:function(){}})" title="Selecciona un elemento y pulsa, o arrástralo aquí"><i class="fa-solid fa-trash-can mr-1"></i>Eliminar seleccionado</button>
                 </div>
+                <div class="w-[900px] mb-2 flex justify-end am-ver-grande-fila"><button onclick="amPantallaCompleta(['canvas-plano','plano-rangos'])" class="am-ver-grande"><i class="fa-solid fa-expand mr-1"></i> Ver plano en grande</button></div>
                 <div id="canvas-plano" class="w-[900px] h-[600px] rounded-xl relative plan-grid overflow-hidden bg-white shadow-xl flex-shrink-0 border border-gray-300" ondragover="allowDrop(event)" ondrop="dropOnCanvas(event)">
                     <div class="absolute top-4 left-4 bg-white/90 px-4 py-2 rounded shadow text-sm font-black text-gray-700 z-0 border">SALA / CARPA</div>
                     <div id="layer-mesas" class="absolute inset-0 z-10 w-full h-full"></div>
@@ -7127,8 +7128,8 @@
             pzImprimirBloques(bloques);
         }
     </script>
-    <script src="ficha_campos.js?v=1795804596"></script>
-    <script src="mejoras.js?v=1795804596"></script>
+    <script src="ficha_campos.js?v=1795804687"></script>
+    <script src="mejoras.js?v=1795804687"></script>
     <!-- Acceso (Firebase) -->
     <div id="nb-capa" class="nb-capa">
         <div id="nb-carga" class="nb-tarjeta">
@@ -7156,7 +7157,7 @@
     </div>
     <div id="nb-modal" class="nb-modal nb-oculto"><div id="nb-modal-caja" class="nb-modal-caja"></div></div>
 
-    <script type="module" src="nube.js?v=1795804596"></script>
+    <script type="module" src="nube.js?v=1795804687"></script>
     <script>if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function (e) { console.warn('Sin modo offline', e); }); }); }</script>
 </body>
 </html>
