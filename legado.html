@@ -37,7 +37,7 @@
         /* Modo visión (solo lectura) */
         body.modo-vision main input, body.modo-vision main select, body.modo-vision main textarea, body.modo-vision main [contenteditable="true"] { cursor: not-allowed !important; caret-color: transparent; }
         body.modo-vision main button:not([onclick^="switch"]):not([onclick^="toggle"]):not([onclick^="setEvalTab"]):not([onclick^="vision"]) { opacity: .55; cursor: not-allowed !important; }
-        body.modo-vision #view-calendar button, body.modo-vision #view-historico button, body.modo-vision #vision-banner button { opacity: 1 !important; cursor: pointer !important; }
+        body.modo-vision #view-calendar button, body.modo-vision #view-historico button, body.modo-vision #vision-banner button, body.modo-vision .am-ver-grande { opacity: 1 !important; cursor: pointer !important; }
         body.modo-vision .item-plano { cursor: default !important; }
         body.modo-vision #sidebar-tools { display: none !important; }
         #vision-banner.vb-flash { animation: vbflash .6s ease; }
@@ -1907,7 +1907,7 @@
         // Se puede navegar por todas las hojas del evento, pero no escribir, seleccionar, mover, añadir ni borrar nada.
         // Nunca se guarda en Sheets y, al salir, el evento se restaura tal y como estaba.
         let modoVision = false, visionSnapshot = null, visionEventId = null;
-        const VISION_PERMITIDOS = /^\s*(event\.stopPropagation\(\);\s*)?(switchTab|switchSubTab|switchSimpleTabs|toggleMenu|switchPlanoMode|switchMinutaTab|switchMinutaCamarerosTab|setEvalTab|calNav|calGoYear|clearFiltrosHistorico|closeHistoricoModal|openModalTrazabilidad|closeModalTrazabilidad|renderMinutaPreview|finalizarRegistro|visionPasarEdicion|visionSalir|flushSaves|closeModal|closeModalZona|closeModalCategorias)\b/;
+        const VISION_PERMITIDOS = /^\s*(event\.stopPropagation\(\);\s*)?(switchTab|switchSubTab|switchSimpleTabs|toggleMenu|switchPlanoMode|amPantallaCompleta|amPcModo|switchMinutaTab|switchMinutaCamarerosTab|setEvalTab|calNav|calGoYear|clearFiltrosHistorico|closeHistoricoModal|openModalTrazabilidad|closeModalTrazabilidad|renderMinutaPreview|finalizarRegistro|visionPasarEdicion|visionSalir|flushSaves|closeModal|closeModalZona|closeModalCategorias)\b/;
         function visionActivar(id) {
             modoVision = true; visionEventId = id;
             try { visionSnapshot = JSON.stringify(appData.events[id]); } catch (e) { visionSnapshot = null; }
