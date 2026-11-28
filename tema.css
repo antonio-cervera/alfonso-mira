@@ -606,3 +606,24 @@ body.am-pcomp-abierta { overflow: hidden; }
 .am-ver-grande { background: #3F5A2E; color: #fff; font-weight: 800; font-size: 13px; border-radius: 10px; padding: 8px 14px; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
 .am-ver-grande:hover { background: #34491F; }
 @media print { .am-ver-grande-fila { display: none !important; } }
+/* ── Móvil: ninguna hoja «baila» a lo ancho. Lo que es más ancho que la pantalla se desliza dentro de su propio recuadro ── */
+@media (max-width: 900px) {
+  html, body { overflow-x: hidden; }
+  body > main [id^="view-"] { overflow-x: hidden; }
+  /* Filas de subpestañas (Informe, Consumos, Equipos…): una sola fila deslizable */
+  body > main *:has(> button[class*="subtab-btn"]) { overflow-x: auto; flex-wrap: nowrap !important; -webkit-overflow-scrolling: touch; scrollbar-width: none; max-width: 100%; }
+  body > main *:has(> button[class*="subtab-btn"])::-webkit-scrollbar { display: none; }
+  body > main *:has(> button[class*="subtab-btn"]) > button { flex: 0 0 auto; white-space: nowrap; }
+  /* Tablas anchas (Control, Ceremonia, Informe…) */
+  .am-tabla { display: block; overflow-x: auto; max-width: 100%; -webkit-overflow-scrolling: touch; }
+  /* Recuadros en fila que no caben */
+  #view-coordinadores-material .flex.gap-4 { flex-wrap: wrap; }
+}
+@media (max-width: 900px) {
+  body > main div.sticky.flex { overflow-x: auto; flex-wrap: nowrap !important; gap: 4px !important; padding: 10px 10px 0 !important; max-width: 100%; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  body > main div.sticky.flex::-webkit-scrollbar { display: none; }
+  body > main div.sticky.flex > button { flex: 0 0 auto; white-space: nowrap; font-size: 12px; }
+  #informe-root > .p-8 { padding: 12px !important; }
+  .inf-tab { display: block; overflow-x: auto; max-width: 100%; -webkit-overflow-scrolling: touch; }
+}
+@media (max-width: 900px) { .inf-2col { grid-template-columns: 1fr !important; } }
